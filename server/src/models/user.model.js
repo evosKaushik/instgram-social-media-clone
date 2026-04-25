@@ -55,6 +55,7 @@ const userSchema = new Schema(
   { timestamps: true, strict: "throw" },
 );
 
+
 const User = model("User", userSchema);
 
 export default User;
