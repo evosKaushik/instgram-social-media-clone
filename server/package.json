@@ -2,16 +2,21 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
   "type": "module",
+  "main": "src/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch src/app.js",
+    "start": "node src/app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mongoose": "^9.5.0"
+    "mongo-sanitize": "^1.1.0",
+    "mongoose": "^9.5.0",
+    "zod": "^4.3.6"
   }
 }
