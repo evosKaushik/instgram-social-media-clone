@@ -43,7 +43,7 @@ export const generateSession = async ({
   const cookieOptions = {
     httpOnly: true,
     secure: ENV.NODE_ENV === "production",
-    sameSite: "Strict",
+    sameSite: "strict",
   };
 
   // 4. Set cookies ONLY for web
