@@ -51,6 +51,11 @@ const userSchema = new Schema(
       default: false,
       description: "Indicates if the user has a blue tick (verified account)",
     },
+    isPrivate: {
+      type: Boolean,
+      default: false,
+      description: "Indicates if the user's account is private",
+    }
   },
   { timestamps: true, strict: "throw" },
 );
