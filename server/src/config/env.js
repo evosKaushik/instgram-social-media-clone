@@ -3,7 +3,6 @@ dotenv.config();
 
 import { envSchema } from "../validators/env.validator.js";
 
-
 // Validate
 const parsed = envSchema.safeParse(process.env);
 
@@ -17,6 +16,7 @@ if (!parsed.success) {
 export const ENV = {
   PORT: Number(parsed.data.PORT),
   MONGO_URI: parsed.data.MONGO_URI,
-  JWT_SECRET: parsed.data.JWT_SECRET,
   NODE_ENV: parsed.data.NODE_ENV,
+  ACCESS_TOKEN_SECRET: parsed.data.ACCESS_TOKEN_SECRET,
+  REFRESH_TOKEN_SECRET: parsed.data.REFRESH_TOKEN_SECRET,
 };
