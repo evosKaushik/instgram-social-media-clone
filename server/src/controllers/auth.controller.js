@@ -4,10 +4,13 @@
  * @param {import('express').NextFunction} next
  */
 
+import { UAParser } from "ua-parser-js";
 import User from "../models/user.model.js";
 import { comparePassword, hashPassword } from "../utils/bcrypt.js";
 import { generateSession } from "../utils/generateSession.js";
 import { loginSchema, registerSchema } from "../validators/auth.validator.js";
+import Session from "../models/session.model.js";
+import { createSession } from "../services/session.service.js";
 
 const userRegister = async (req, res, next) => {
   const { name, username, email, password } = req.body;
@@ -111,9 +114,25 @@ const userLogin = async (req, res, next) => {
       });
     }
 
-    const { accessToken, refreshToken } = await generateSession(user, req, res);
+    const { accessToken, refreshToken } = await generateSession({
+      user,
+      req,
+      res,
+    });
 
-    // TODO: Store refreshToken in DB Session
+    const session = await createSession({
+      userId: user._id,
+      req,
+      res,
+      refreshToken,
+    }); // Store session in DB
+
+    if (!session) {
+      return res.status(500).json({
+        error: "Failed to create session",
+        success: false,
+      });
+    }
 
     res.status(200).json({
       message: "Login successful",
