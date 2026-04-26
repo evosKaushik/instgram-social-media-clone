@@ -151,4 +151,32 @@ const userLogin = async (req, res, next) => {
   }
 };
 
-export { userRegister, userLogin };
+const userLogout = async (req, res, next) => {
+  try {
+    const sessionId = req.sessionId;
+    if (!sessionId) {
+      return res.status(400).json({
+        error: "No active session found",
+        success: false,
+      });
+    }
+
+    const session = await Session.findOneAndUpdate({ _id: sessionId }, { isValid: false }).lean(); 
+
+    if (!session) {
+      return res.status(400).json({
+        error: "Session not found",
+        success: false,
+      });
+    }
+
+    res.status(200).json({
+      message: "Logout successful",
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { userRegister, userLogin, userLogout };
