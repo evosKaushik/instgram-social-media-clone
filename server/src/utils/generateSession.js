@@ -2,31 +2,37 @@ import jwt from "jsonwebtoken";
 import { ENV } from "../config/env.js";
 
 // 🔐 helper to sign tokens
-const signAccessToken = (user) => {
+const signAccessToken = (user, accessTokenExpiresAt) => {
   return jwt.sign(
     {
       id: user._id,
     },
     ENV.ACCESS_TOKEN_SECRET,
-    { expiresIn: "15m" },
+    { expiresIn: accessTokenExpiresAt },
   );
 };
 
-const signRefreshToken = (user) => {
+const signRefreshToken = (user, refreshTokenExpiresAt) => {
   return jwt.sign(
     {
       id: user._id,
     },
     ENV.REFRESH_TOKEN_SECRET,
-    { expiresIn: "30d" },
+    { expiresIn: refreshTokenExpiresAt },
   );
 };
 
 // 🧠 MAIN FUNCTION
-export const generateSession = async (user, req, res) => {
+export const generateSession = async ({
+  user,
+  req,
+  res,
+  refreshTokenExpiresAt = "30d",
+  accessTokenExpiresAt = "15m",
+}) => {
   // 1. Generate tokens
-  const accessToken = signAccessToken(user);
-  const refreshToken = signRefreshToken(user);
+  const accessToken = signAccessToken(user, accessTokenExpiresAt);
+  const refreshToken = signRefreshToken(user, refreshTokenExpiresAt);
 
   // 2. Detect client (mobile vs web)
   const isMobile =
@@ -46,16 +52,7 @@ export const generateSession = async (user, req, res) => {
       ...cookieOptions,
       maxAge: 15 * 60 * 1000, // 15 min
     });
-
-    // res.cookie("refreshToken", refreshToken, {
-    //   ...cookieOptions,
-    //   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    // });
   }
-
-  // 5. (Optional but IMPORTANT) store refresh token in DB
-  // 👉 you should implement this in your user/session model
-  // await Session.create({ userId: user._id, refreshToken });
 
   // 6. Return response (mobile NEEDS tokens)
   return {
