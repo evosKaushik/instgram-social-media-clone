@@ -161,7 +161,10 @@ const userLogout = async (req, res, next) => {
       });
     }
 
-    const session = await Session.findOneAndUpdate({ _id: sessionId }, { isValid: false }).lean(); 
+    const session = await Session.findOneAndUpdate(
+      { _id: sessionId },
+      { isValid: false },
+    ).lean();
 
     if (!session) {
       return res.status(400).json({
@@ -179,4 +182,20 @@ const userLogout = async (req, res, next) => {
   }
 };
 
-export { userRegister, userLogin, userLogout };
+const getUser = async (req, res, next) => {
+  const user = req.user;
+  res.status(200).json({
+    success: true,
+    user: {
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      bio: user.bio,
+      isBlueTick: user.isBlueTick,
+      isPrivate: user.isPrivate,
+    },
+  });
+};
+
+export { userRegister, userLogin, userLogout, getUser };
