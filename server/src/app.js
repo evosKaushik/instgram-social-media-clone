@@ -6,6 +6,7 @@ import errorHandler from "./middlewares/error.middleware.js";
 import sanitizeHandler from "./middlewares/sanitize.middleware.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import metricsMiddleware from "./middlewares/debug.middleware.js";
 
 const app = express();
 
@@ -22,6 +23,9 @@ app.use(cors({
 
 //Custom Middleware
 app.use(sanitizeHandler); // Sanitize data to prevent NoSQL injection
+
+// Debugging Middleware
+app.use(metricsMiddleware); // Log request metrics in development mode
 
 // Routes
 app.use("/api/v1/auth", authRoutes); // Auth routes
