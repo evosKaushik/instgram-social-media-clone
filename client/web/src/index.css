@@ -1,13 +1,85 @@
 @import "tailwindcss";
 
+/* Fonts */
 @theme {
-  --font-sans: 'Inter', sans-serif;
-  --font-serif: 'Lobster', cursive;
+  --font-sans: "Inter", sans-serif;
+  --font-display: "Lobster", cursive;
 }
 
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+/* Scrollbar hide */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
+/* Cursor */
 .story-ring {
   cursor: pointer;
+}
+
+/* Remove Chrome autofill background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px var(--background) inset !important;
+  box-shadow: 0 0 0px 1000px var(--background) inset !important;
+
+  -webkit-text-fill-color: var(--foreground) !important;
+  caret-color: var(--foreground);
+  
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Enable dark variant (optional if you use class) */
+@custom-variant dark (&:is(.dark *));
+
+/* Base colors (light) */
+:root {
+  color-scheme: light dark;
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --text: oklch(0.145 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+}
+
+/* Auto dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --text: oklch(0.985 0 0);
+    --border: oklch(0.275 0 0);
+    --input: oklch(0.325 0 0);
+    --ring: oklch(0.556 0 0);
+  }
+}
+
+/* Map to Tailwind */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-text: var(--text);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-sans);
+}
+
+/* Base styles */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
 }

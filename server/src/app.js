@@ -17,7 +17,7 @@ await connectDB();
 app.use(express.json()); // Replace body-parser with built-in middleware in JSON
 app.use(cookieParser()); // Parse cookies from incoming requests
 app.use(cors({
-  origin: "*", // Allow requests from this origin
+  origin: "http://localhost:5173", // Allow requests from this origin
   credentials: true, // Allow cookies to be sent with requests
 })); // Enable CORS for all routes (you can configure it further as needed)
 
