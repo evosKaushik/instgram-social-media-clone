@@ -6,7 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuth.store";
 
 // ---------------- SCHEMA ----------------
-const loginSchema = z.object({
+const signupSchema = z.object({
   name: z
     .string()
     .min(3, "Name should be more than  3 characters")
@@ -16,7 +16,7 @@ const loginSchema = z.object({
     .min(3, "Username must be at least 3 characters")
     .max(20, "Username can't more than 20 characters")
     .regex(/^(?!_)(?!.*__)[a-zA-Z0-9_]{3,20}(?<!_)$/, "Invalid username")
-    .toLowerCase()
+    .transform((val) => val.toLowerCase())
     .refine((val) => !val.startsWith("_"), {
       message: "Username cannot start with '_'",
     })
@@ -30,10 +30,9 @@ const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-const InstagramLogin = () => {
+const Signup = () => {
   const [focusedField, setFocusedField] = useState(null);
   const signup = useAuthStore((s) => s.signup);
-  const status = useAuthStore((s) => s.status);
   const navigate = useNavigate();
 
   const {
@@ -41,7 +40,7 @@ const InstagramLogin = () => {
     handleSubmit,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(loginSchema) });
+  } = useForm({ resolver: zodResolver(signupSchema) });
 
   const nameVal = watch("name", "");
   const usernameVal = watch("username", "");
@@ -52,7 +51,7 @@ const InstagramLogin = () => {
     const success = await signup(formData);
 
     if (success) {
-      setInterval(() => {
+      setTimeout(() => {
         navigate("/", { replace: true });
       }, 2000);
     }
@@ -278,15 +277,6 @@ const InstagramLogin = () => {
             </button>
           </form>
 
-          {/* Forgot password */}
-          <div className="w-full text-center">
-            <Link
-              to="/forgot-password"
-              className="text-foreground text-sm hover:underline"
-            >
-              Forgot password?
-            </Link>
-          </div>
 
           {/* Divider */}
           <div className="w-full flex items-center gap-3 my-1">
@@ -302,7 +292,9 @@ const InstagramLogin = () => {
             type="button"
             className="w-full border rounded-xl py-2.5 text-sm font-semibold text-[#0095f6] border-border hover:bg-muted transition-colors hover:cursor-pointer"
           >
+            <Link to="/login">
             Already have account, Login
+            </Link>
           </button>
         </div>
       </main>
@@ -320,4 +312,4 @@ const InstagramLogin = () => {
   );
 };
 
-export default InstagramLogin;
+export default Signup;
