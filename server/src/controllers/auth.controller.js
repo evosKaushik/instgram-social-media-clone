@@ -143,6 +143,8 @@ const userLogin = async (req, res, next) => {
         username: user.username,
         email: user.email,
         bio: user.bio,
+        isBlueTick: user.isBlueTick,
+        isPrivate: user.isPrivate,
       },
       session: accessToken,
     });

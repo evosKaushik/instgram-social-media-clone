@@ -3,7 +3,7 @@ import { maxLength, minLength } from "zod";
 
 const userSchema = new Schema(
   {
-    name:{
+    name: {
       type: String,
       required: true,
       minLength: [3, "Full name must be at least 3 characters"],
@@ -17,11 +17,19 @@ const userSchema = new Schema(
       minLength: [3, "Username must be at least 3 characters"],
       maxLength: [20, "Username cannot exceed 20 characters"],
       description: "Unique username for the user",
+      match: [
+        /^(?!_)(?!.*__)[a-zA-Z0-9_]{3,20}(?<!_)$/,
+        "Invalid username or consecutive underscores",
+      ],
+      lowercase: true,
+      trim: true,
     },
     email: {
       type: String,
       required: true,
       unique: true,
+      lowercase: true,
+      trim: true,
       match: [
         /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
         "Email is invalid",
@@ -31,8 +39,8 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: true,
-      minLength : [6, "Password must be at least 6 characters"],
-      maxLength : [100, "Password cannot exceed 100 characters"],
+      minLength: [6, "Password must be at least 6 characters"],
+      maxLength: [100, "Password cannot exceed 100 characters"],
       description: "Password for the user",
       select: false, // Don't return password by default
     },
@@ -55,11 +63,14 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
       description: "Indicates if the user's account is private",
-    }
+    },
   },
   { timestamps: true, strict: "throw" },
 );
 
+userSchema.pre("save", function (docs) {
+  this.bio = `Hi, I am ${this.name}`;
+});
 
 const User = model("User", userSchema);
 
