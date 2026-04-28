@@ -2,13 +2,15 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
-import axiosInstance from "../utils/axios";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuthStore } from "../store/useAuth.store";
 
 // ---------------- SCHEMA ----------------
 const loginSchema = z.object({
-  name: z.string().min(3, "Name should be more than  3 characters"),
+  name: z
+    .string()
+    .min(3, "Name should be more than  3 characters")
+    .max(16, "Full name cannot exceed 16 characters"),
   username: z
     .string()
     .min(3, "Username must be at least 3 characters")
@@ -23,16 +25,16 @@ const loginSchema = z.object({
     })
     .refine((val) => !val.includes("__"), {
       message: "Username cannot contain consecutive underscores",
-    })
-    .refine((val) => val !== val.toLowerCase(), {
-      message: "Username must be at lowercase",
     }),
-  email: z.string().min(3, "Email or username is required"),
+  email: z.email().min(3, "Email or username is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 const InstagramLogin = () => {
   const [focusedField, setFocusedField] = useState(null);
+  const signup = useAuthStore((s) => s.signup);
+  const status = useAuthStore((s) => s.status);
+  const navigate = useNavigate();
 
   const {
     register,
@@ -46,13 +48,13 @@ const InstagramLogin = () => {
   const emailVal = watch("email", "");
   const passwordVal = watch("password", "");
 
-  const onSubmit = async (data) => {
-    try {
-      console.log(data);
-      // await axiosInstance.post("/auth/register", data)
-    } catch (error) {
-      console.log(error);
-      toast.error(error.response?.data?.error || "Login failed");
+  const onSubmit = async (formData) => {
+    const success = await signup(formData);
+
+    if (success) {
+      setInterval(() => {
+        navigate("/", { replace: true });
+      }, 2000);
     }
   };
 
@@ -105,7 +107,7 @@ const InstagramLogin = () => {
         {/* ── RIGHT PANEL (login form) ── */}
         <div className="w-full max-w-md lg:w-[30%]  flex flex-col items-start justify-center gap-4 py-6">
           {/* Mobile logo */}
-          <div className="lg:hidden mb-2">
+          <div className="size-16 lg:hidden mb-2 mx-auto">
             <img src="./Instagram.png" alt="Instagram Logo" />
           </div>
 
@@ -142,7 +144,6 @@ const InstagramLogin = () => {
                 <input
                   id="name"
                   type="text"
-                  autoComplete="name"
                   {...register("name")}
                   onFocus={() => setFocusedField("name")}
                   onBlur={() => setFocusedField(null)}
@@ -179,7 +180,6 @@ const InstagramLogin = () => {
                 <input
                   id="username"
                   type="text"
-                  autoComplete="username"
                   {...register("username")}
                   onFocus={() => setFocusedField("username")}
                   onBlur={() => setFocusedField(null)}
@@ -211,12 +211,11 @@ const InstagramLogin = () => {
                       : "top-3.5 text-sm"
                   }`}
                 >
-                  Mobile number, username or email
+                  Email
                 </label>
                 <input
                   id="email"
                   type="text"
-                  autoComplete="username"
                   {...register("email")}
                   onFocus={() => setFocusedField("email")}
                   onBlur={() => setFocusedField(null)}
@@ -253,7 +252,6 @@ const InstagramLogin = () => {
                 <input
                   id="password"
                   type="password"
-                  autoComplete="current-password"
                   {...register("password")}
                   onFocus={() => setFocusedField("password")}
                   onBlur={() => setFocusedField(null)}
@@ -276,7 +274,7 @@ const InstagramLogin = () => {
                 opacity: isSubmitting ? 0.6 : 1,
               }}
             >
-              {isSubmitting ? "Logging in…" : "Log in"}
+              {isSubmitting ? "Creating account..." : "Sign up"}
             </button>
           </form>
 

@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import { Toaster } from "react-hot-toast";
+import { ThemeProvider } from "./context/ThemeProvider.jsx";
 
 const router = createBrowserRouter([
   {
@@ -37,7 +38,9 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <RouterProvider router={router} />
-    <Toaster />
+    <ThemeProvider >
+      <RouterProvider router={router} />
+      <Toaster />
+    </ThemeProvider>
   </StrictMode>,
 );
