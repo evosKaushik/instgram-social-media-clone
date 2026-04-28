@@ -4,7 +4,6 @@ import axiosInstance from "../utils/axios";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
-
   isCheckingAuth: false,
   isSigningUp: false,
   isLoggingIn: false,
@@ -27,11 +26,11 @@ export const useAuthStore = create((set, get) => ({
   },
 
   // 📝 SIGNUP
-  signup: async (formData) => {
+  signup: async (payload) => {
     set({ isSigningUp: true });
 
     try {
-      const { data } = await axiosInstance.post("/auth/signup", formData);
+      const { data } = await axiosInstance.post("/auth/signup", payload);
 
       if (data.success) {
         set({ authUser: data.data });
@@ -59,9 +58,6 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       toast.success("Logged in successfully");
 
-      // optional: socket
-      get().connectSocket?.();
-
       return true;
     } catch (error) {
       toast.error(error?.response?.data?.message || "Login failed");
@@ -78,8 +74,6 @@ export const useAuthStore = create((set, get) => ({
 
       set({ authUser: null });
       toast.success("Logged out successfully");
-
-      get().disconnectSocket?.();
 
       return true;
     } catch (error) {
