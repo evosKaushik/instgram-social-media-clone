@@ -58,7 +58,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans">
+    <div className="min-h-screen w-full flex flex-col font-sans">
       {/* ── MAIN CONTENT ── */}
       <main className="flex flex-1 items-center justify-center py-8 gap-8  mx-auto w-full bg-background">
         {/* ── LEFT PANEL ── */}

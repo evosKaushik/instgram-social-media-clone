@@ -79,3 +79,35 @@ select:-webkit-autofill {
     @apply bg-background text-foreground font-sans;
   }
 }
+
+/* 🎯 Custom Scrollbar Class */
+.scrollbar {
+  overflow: auto;
+}
+
+/* Chrome, Edge, Safari */
+.scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.scrollbar::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+  border: 2px solid var(--background);
+  transition: background 0.2s ease;
+}
+
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--ring);
+}
+
+/* Firefox */
+.scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--background);
+}

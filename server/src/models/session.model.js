@@ -26,7 +26,7 @@ const sessionSchema = new Schema(
       required: true,
     },
   },
-  { timestamps: true },
+  { timestamps: true, strict: "throw" },
 );
 
 const Session = model("Session", sessionSchema);

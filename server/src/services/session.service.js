@@ -25,8 +25,8 @@ const createSession = async ({ userId, req, res, refreshToken }) => {
   return Session.insertOne({
     userId,
     refreshToken: hashToken(refreshToken),
-    device,
-    ip,
+    deviceInfo: device,
+    ipAddress: ip,
     isValid: true,
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   });

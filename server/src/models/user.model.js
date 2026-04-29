@@ -44,9 +44,10 @@ const userSchema = new Schema(
       description: "Password for the user",
       select: false, // Don't return password by default
     },
-    profilePicture: {
+    avatar: {
       type: String,
-      default: "",
+      default:
+        "https://res.cloudinary.com/dvhqwwpdl/image/upload/v1777466315/default-avatar_qj17hv.jpg",
       description: "URL of the user's profile picture",
     },
     bio: {
@@ -65,11 +66,30 @@ const userSchema = new Schema(
       description: "Indicates if the user's account is private",
     },
   },
-  { timestamps: true, strict: "throw" },
+  {
+    timestamps: true,
+    strict: "throw",
+    toJSON: {
+      virtuals: true,
+      transform: function (doc, ret) {
+        ret.id = ret._id.toString(); // rename _id → id
+
+        delete ret._id;
+        delete ret.__v;
+        delete ret.createdAt;
+        delete ret.updatedAt;
+        delete ret.password; // extra safety
+
+        return ret;
+      },
+    },
+  },
 );
 
 userSchema.pre("save", function (docs) {
-  this.bio = `Hi, I am ${this.name}`;
+  if (!this.bio) {
+    this.bio = `Hi, I am ${this.name}`;
+  }
 });
 
 const User = model("User", userSchema);
