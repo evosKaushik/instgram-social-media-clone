@@ -6,6 +6,7 @@ const metricsMiddleware = (req, res, next) => {
       console.log({
         route: req.originalUrl,
         status: res.statusCode,
+        memory: process.memoryUsage,
         time: `${Date.now() - start}ms`
       });
     }

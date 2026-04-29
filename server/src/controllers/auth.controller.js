@@ -11,6 +11,9 @@ import { generateSession } from "../utils/generateSession.js";
 import { loginSchema, registerSchema } from "../validators/auth.validator.js";
 import Session from "../models/session.model.js";
 import { createSession } from "../services/session.service.js";
+import { ENV } from "../config/env.js";
+import { hashToken } from "../utils/utils.js";
+import jwt from "jsonwebtoken";
 
 const userRegister = async (req, res, next) => {
   const { name, username, email, password } = req.body;
@@ -200,4 +203,50 @@ const getUser = async (req, res, next) => {
   });
 };
 
-export { userRegister, userLogin, userLogout, getUser };
+const refreshToken = async (req, res, next) => {
+  const refreshToken = req.cookies.refreshSession;
+
+  if (!refreshToken) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized, token not provided",
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, ENV.REFRESH_TOKEN_SECRET);
+
+    const hashedToken = hashToken(refreshToken);
+
+    const session = await Session.findOne({
+      userId: decoded.id,
+      refreshToken: hashedToken,
+    });
+
+    if (!session) {
+      return res.status(403).json({ message: "Session not found" });
+    }
+
+    // 3️⃣ Generate new access token
+    const newAccessToken = jwt.sign(
+      { id: decoded.id },
+      ENV.ACCESS_TOKEN_SECRET,
+      { expiresIn: "15m" },
+    );
+
+    // 5️⃣ Set cookies
+    res.cookie("session", newAccessToken, {
+      httpOnly: true,
+      secure: ENV.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    return res.json({ success: true, token: newAccessToken });
+  } catch (err) {
+    console.log(err);
+    return res.status(403).json({ error: "Invalid refresh token" });
+  }
+};
+
+export { userRegister, userLogin, userLogout, getUser, refreshToken };
