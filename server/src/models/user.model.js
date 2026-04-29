@@ -48,7 +48,6 @@ const userSchema = new Schema(
       type: String,
       default:
         "https://res.cloudinary.com/dvhqwwpdl/image/upload/v1777466315/default-avatar_qj17hv.jpg",
-      description: "URL of the user's profile picture",
     },
     bio: {
       type: String,

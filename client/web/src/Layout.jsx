@@ -19,7 +19,7 @@ const Layout = () => {
   return (
     // <main className="min-h-screen w-full">
     <Suspense fallback={<Loader />}>
-      <main className="grow overflow-y-auto h-screen w-full md:pl-18 lg:pl-61 pb-12.5 md:pb-0  relative transition">
+      <main className="grow overflow-y-hidden h-screen w-full md:pl-18 lg:pl-61 pb-12.5 md:pb-0  relative transition">
         <Sidebar />
         <Outlet />
       </main>
