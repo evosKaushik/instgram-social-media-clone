@@ -39,7 +39,7 @@ const userRegister = async (req, res, next) => {
   try {
     const existingUser = await User.findOne({
       $or: [{ email }, { username }],
-    }).lean(); // Check if email or username already exists
+    })
     if (existingUser) {
       return res.status(400).json({
         error: "Email or username already exists",
@@ -60,13 +60,7 @@ const userRegister = async (req, res, next) => {
     res.status(201).json({
       message: "User registered successfully",
       success: true,
-      data: {
-        id: createdUser.id,
-        name: createdUser.name,
-        username: createdUser.username,
-        email: createdUser.email,
-        bio: createdUser.bio,
-      },
+      data: createdUser
     });
   } catch (error) {
     next(error);
@@ -137,6 +131,7 @@ const userLogin = async (req, res, next) => {
       });
     }
 
+
     res.status(200).json({
       message: "Login successful",
       success: true,
@@ -189,17 +184,10 @@ const userLogout = async (req, res, next) => {
 
 const getUser = async (req, res, next) => {
   const user = req.user;
+
   res.status(200).json({
     success: true,
-    user: {
-      id: user.id,
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      bio: user.bio,
-      isBlueTick: user.isBlueTick,
-      isPrivate: user.isPrivate,
-    },
+    user
   });
 };
 

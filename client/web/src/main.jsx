@@ -10,6 +10,10 @@ import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./context/ThemeProvider.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import { lazy } from "react";
+
+// const Home = lazy(() => import("./pages/Home.jsx"));
 
 const router = createBrowserRouter([
   {
@@ -18,27 +22,31 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Home />,
-      },
-      {
-        path: "/login",
-        element: <Login />,
-      },
-      {
-        path: "/signup",
-        element: <Signup />,
-      },
-      {
-        path: "*",
-        element: <NotFound />,
+        element: (
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        ),
       },
     ],
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/signup",
+    element: <Signup />,
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <ThemeProvider >
+    <ThemeProvider>
       <RouterProvider router={router} />
       <Toaster />
     </ThemeProvider>
