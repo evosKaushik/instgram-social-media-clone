@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { ENV } from "../config/env.js";
 
 // 🔐 helper to sign tokens
-const signAccessToken = (user, accessTokenExpiresAt) => {
+export const signAccessToken = (user, accessTokenExpiresAt = "15m") => {
   return jwt.sign(
     {
       id: user._id,
@@ -51,6 +51,10 @@ export const generateSession = async ({
     res.cookie("session", accessToken, {
       ...cookieOptions,
       maxAge: 15 * 60 * 1000, // 15 min
+    });
+    res.cookie("refreshSession", refreshToken, {
+      ...cookieOptions,
+      maxAge:  30 * 24 * 60 * 60 * 1000 // 15 min
     });
   }
 

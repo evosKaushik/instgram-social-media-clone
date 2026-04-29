@@ -1,6 +1,7 @@
 import { UAParser } from "ua-parser-js";
 import { getClientIp } from "get-client-ip";
 import Session from "../models/session.model.js";
+import { hashToken } from "../utils/utils.js";
 
 const createSession = async ({ userId, req, res, refreshToken }) => {
   const sessions = await Session.find({ userId, isValid: true }).lean();
@@ -23,7 +24,7 @@ const createSession = async ({ userId, req, res, refreshToken }) => {
 
   return Session.insertOne({
     userId,
-    refreshToken,
+    refreshToken: hashToken(refreshToken),
     device,
     ip,
     isValid: true,
