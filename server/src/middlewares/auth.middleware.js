@@ -23,19 +23,7 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    const dbSession = await Session.findOne({
-      user: user.id,
-      isValid: true,
-      expiresAt: { $gt: new Date() },
-    }).lean();
-
-
-    if (!dbSession) {
-      return res.status(401).json({ error: "Session expired" });
-    }
-
     req.user = user; // Attach full user object to request
-    req.sessionId = dbSession._id; // Attach session ID to request for logout
 
     next();
   } catch (error) {
