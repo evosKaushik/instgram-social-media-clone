@@ -12,6 +12,7 @@ import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./context/ThemeProvider.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import { lazy } from "react";
+import Profile from "./pages/Profile.jsx";
 
 // const Home = lazy(() => import("./pages/Home.jsx"));
 
@@ -28,15 +29,31 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: "/:userId",
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
   {
     path: "/login",
-    element: <Login />,
+    element: (
+      <ProtectedRoute isPublic={true}>
+        <Login />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/signup",
-    element: <Signup />,
+    element: (
+      <ProtectedRoute isPublic={true}>
+        <Signup />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "*",

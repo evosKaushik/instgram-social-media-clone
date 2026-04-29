@@ -2,8 +2,8 @@ import Post from "../components/Post";
 
 const Home = () => {
   return (
-    <section className="h-full w-full  scrollbar">
-      <div className="h-full w-full flex  mx-auto justify-center sm:pt-8 pt-0 max-w-[820px]">
+    <section className="h-full w-full   scrollbar">
+      <div className="h-full w-full flex  mx-auto justify-center sm:pt-8 pt-0 max-w-[820px] ">
         <div className="w-full max-w-[470px] flex flex-col items-center mt-1 sm:mt-0">
           {/* Stories */}
           <div className="w-full mb-2 sm:mb-6 mt-1 sm:mt-0">
@@ -24,7 +24,6 @@ const Home = () => {
               {/* Additional stories can be mapped here */}
             </div>
           </div>
-
           {/* Post */}
           <Post />
         </div>

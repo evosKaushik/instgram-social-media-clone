@@ -1,9 +1,10 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import { useAuthStore } from "../store/useAuth.store";
 
 export default function Sidebar({ toggleSearch, toggleNotif, toggleCreate }) {
-  const {avatar} = useAuthStore((s) => s.authUser);
+  const authUser = useAuthStore((s) => s.authUser);
+
 
   return (
     <>
@@ -96,13 +97,13 @@ export default function Sidebar({ toggleSearch, toggleNotif, toggleCreate }) {
             <span className="hidden lg:block text-[15px]">Create</span>
           </a>
           <NavLink
-            to="/profile"
+            to={`/${authUser?.username}`}
             className={({ isActive }) =>
               `flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg group transition-colors w-fit lg:w-full ${isActive ? "font-bold" : ""}`
             }
           >
             <img
-              src={avatar}
+              src={authUser?.avatar || "default-avatar.jpeg"}
               className="w-6 h-6 rounded-full group-hover:scale-105 transition-transform object-cover"
             />
             <span className="hidden lg:block text-[15px]">Profile</span>
@@ -149,11 +150,11 @@ export default function Sidebar({ toggleSearch, toggleNotif, toggleCreate }) {
           <i className="fa-regular fa-square-plus text-2xl"></i>
         </a>
         <NavLink
-          to="/profile"
+          to={`/${authUser?.username}`}
           className="p-2 transition-transform active:scale-95"
         >
           <img
-            src={avatar}
+            src={authUser?.avatar || "default-avatar.jpeg"}
             className="w-6 h-6 rounded-full object-cover border border-gray-300"
           />
         </NavLink>
