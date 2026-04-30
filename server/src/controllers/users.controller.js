@@ -7,16 +7,16 @@ import {
 import { comparePassword, hashPassword } from "../utils/bcrypt.js";
 import { uploadToCloudinary } from "../utils/uploader.js";
 
-const getUserById = async (req, res, next) => {
-  const { userId } = req.params;
-  if (!isValidObjectId(userId))
-    return res.status(400).json({
-      success: false,
-      error: "Invalid, UserId",
-    });
+const getUserByUsername = async (req, res, next) => {
+  const { username } = req.params;
+  // if (!isValidObjectId(userId))
+  //   return res.status(400).json({
+  //     success: false,
+  //     error: "Invalid, UserId",
+  //   });
 
   try {
-    const user = await User.findById(userId);
+    const user = await User.findOne({ username });
 
     if (!user)
       return res.status(404).json({
@@ -212,7 +212,7 @@ const updateAvatar = async (req, res, next) => {
 };
 
 export {
-  getUserById,
+  getUserByUsername,
   getUserByNameAndUsername,
   updateUser,
   changePassword,
