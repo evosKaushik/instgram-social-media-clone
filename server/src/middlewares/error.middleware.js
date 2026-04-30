@@ -1,5 +1,23 @@
+import multer from "multer";
+
 const errorHandler = (err, req, res, next) => {
   console.error(err);
+
+  // ✅ Handle Multer errors
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({
+      success: false,
+      error: err.message, // e.g. "File too large"
+    });
+  }
+
+  // ✅ Handle custom file type error
+  if (err.message === "Only images allowed") {
+    return res.status(400).json({
+      success: false,
+      error: err.message,
+    });
+  }
 
   const statusCode = err.statusCode || 500;
 

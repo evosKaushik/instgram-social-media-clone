@@ -91,6 +91,10 @@ userSchema.pre("save", function (docs) {
   }
 });
 
+userSchema.virtual("id").get(function () {
+  return this._id.toString();
+});
+
 const User = model("User", userSchema);
 
 export default User;
