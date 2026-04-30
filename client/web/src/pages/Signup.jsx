@@ -15,7 +15,7 @@ const signupSchema = z.object({
     .string()
     .min(3, "Username must be at least 3 characters")
     .max(20, "Username can't more than 20 characters")
-    .regex(/^(?!_)(?!.*__)[a-zA-Z0-9_]{3,20}(?<!_)$/, "Invalid username")
+    .regex(/^(?!_)(?!.*__)[a-zA-Z0-9_]{3,20}(?<!_)$/, "Invalid username format")
     .transform((val) => val.toLowerCase())
     .refine((val) => !val.startsWith("_"), {
       message: "Username cannot start with '_'",
