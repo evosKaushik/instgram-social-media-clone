@@ -1,12 +1,17 @@
 import express from "express";
 import connectDB from "./config/db.js";
 import { ENV } from "./config/env.js";
-import authRoutes from "./routes/auth.route.js";
 import errorHandler from "./middlewares/error.middleware.js";
 import sanitizeHandler from "./middlewares/sanitize.middleware.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import metricsMiddleware from "./middlewares/debug.middleware.js";
+
+/*----------------Routes----------------------*/
+import authRoutes from "./routes/auth.route.js";
+import usersRoute from "./routes/users.route.js";
+/*-------------------------------------------*/
+
 
 const app = express();
 
@@ -29,6 +34,7 @@ app.use(metricsMiddleware); // Log request metrics in development mode
 
 // Routes
 app.use("/api/v1/auth", authRoutes); // Auth routes
+app.use("/api/v1/users", usersRoute); // User routes
 
 // Error handling middleware
 app.use(errorHandler);

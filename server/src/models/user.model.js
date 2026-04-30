@@ -47,7 +47,7 @@ const userSchema = new Schema(
     avatar: {
       type: String,
       default:
-        "https://res.cloudinary.com/dvhqwwpdl/image/upload/v1777466315/default-avatar_qj17hv.jpg",
+        "https://res.cloudinary.com/dvhqwwpdl/image/upload/v1777532041/default-avatar_frnvfo.jpg",
     },
     bio: {
       type: String,
@@ -89,6 +89,10 @@ userSchema.pre("save", function (docs) {
   if (!this.bio) {
     this.bio = `Hi, I am ${this.name}`;
   }
+});
+
+userSchema.virtual("id").get(function () {
+  return this._id.toString();
 });
 
 const User = model("User", userSchema);
