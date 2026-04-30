@@ -47,7 +47,7 @@ const userSchema = new Schema(
     avatar: {
       type: String,
       default:
-        "https://res.cloudinary.com/dvhqwwpdl/image/upload/v1777466315/default-avatar_qj17hv.jpg",
+        "https://res.cloudinary.com/dvhqwwpdl/image/upload/v1777532041/default-avatar_frnvfo.jpg",
     },
     bio: {
       type: String,
