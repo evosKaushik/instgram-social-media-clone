@@ -1,20 +1,18 @@
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuth.store";
+import { useEffect } from "react";
 
-const ProtectedRoute = ({ children, isPublic = false }) => {
+export const PublicOnly = ({ children }) => {
   const authUser = useAuthStore((s) => s.authUser);
 
-  
-  if (!isPublic && !authUser) {
-    return <Navigate to="/login" replace />;
-  }
+  const checkAuth = useAuthStore((s) => s.checkAuth);
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
-  
-  if (isPublic && authUser) {
+  if (authUser) {
     return <Navigate to="/" replace />;
   }
 
   return children;
 };
-
-export default ProtectedRoute;
