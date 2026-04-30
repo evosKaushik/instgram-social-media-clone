@@ -4,17 +4,17 @@ import "./index.css";
 import Layout from "./Layout.jsx";
 import { createBrowserRouter } from "react-router-dom";
 import { RouterProvider } from "react-router";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import NotFound from "./pages/NotFound";
+import { lazy } from "react";
+// import Home from "./pages/Home";
+const Home = lazy(() => import("./pages/Home.jsx"));
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Profile = lazy(() => import("./pages/Profile.jsx"));
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./context/ThemeProvider.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import { lazy } from "react";
-import Profile from "./pages/Profile.jsx";
-
-// const Home = lazy(() => import("./pages/Home.jsx"));
+import { RequireAuth } from "./components/RequireAuth.jsx";
+import { PublicOnly } from "./components/PublicOnly.jsx";
 
 const router = createBrowserRouter([
   {
@@ -24,17 +24,17 @@ const router = createBrowserRouter([
       {
         index: true,
         element: (
-          <ProtectedRoute>
+           <RequireAuth>
             <Home />
-          </ProtectedRoute>
+          </RequireAuth>
         ),
       },
       {
         path: "/:username",
         element: (
-          <ProtectedRoute>
+          <RequireAuth>
             <Profile />
-          </ProtectedRoute>
+          </RequireAuth>
         ),
       },
     ],
@@ -42,17 +42,17 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: (
-      <ProtectedRoute isPublic={true}>
+      <PublicOnly isPublic={true}>
         <Login />
-      </ProtectedRoute>
+      </PublicOnly>
     ),
   },
   {
     path: "/signup",
     element: (
-      <ProtectedRoute isPublic={true}>
+      <PublicOnly>
         <Signup />
-      </ProtectedRoute>
+      </PublicOnly>
     ),
   },
   {
