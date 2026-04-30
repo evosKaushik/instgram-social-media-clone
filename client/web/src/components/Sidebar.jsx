@@ -1,10 +1,13 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import { useAuthStore } from "../store/useAuth.store";
+import { useState } from "react";
+import SidebarModal from "./SidebarModal";
+import Search from "./Search";
 
-export default function Sidebar({ toggleSearch, toggleNotif, toggleCreate }) {
+export default function Sidebar({ toggleNotif, toggleCreate }) {
   const authUser = useAuthStore((s) => s.authUser);
-
+  const [open, setOpen] = useState(false);
 
   return (
     <>
@@ -45,14 +48,23 @@ export default function Sidebar({ toggleSearch, toggleNotif, toggleCreate }) {
             <i className="fa-solid fa-house text-[22px] group-hover:scale-105 transition-transform"></i>
             <span className="hidden lg:block text-[15px]">Home</span>
           </NavLink>
-          <a
+          <div
             href="#"
-            onClick={toggleSearch}
-            className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg group transition-colors w-fit lg:w-full"
+            className=" hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg group transition-colors w-fit lg:w-full"
           >
-            <i className="fa-solid fa-magnifying-glass text-[22px] group-hover:scale-105 transition-transform"></i>
-            <span className="hidden lg:block text-[15px]">Search</span>
-          </a>
+            <div
+              onClick={() => setOpen(true)}
+              className="flex items-center gap-4 p-3"
+            >
+              <i className="fa-solid fa-magnifying-glass text-[22px] group-hover:scale-105 transition-transform"></i>
+              <span className="hidden lg:block text-[15px]">Search</span>
+            </div>
+            <div>
+              <SidebarModal isOpen={open} onClose={() => setOpen(false)}>
+                <Search setOpen={setOpen} />
+              </SidebarModal>
+            </div>
+          </div>
           <NavLink
             to="/explore"
             className={({ isActive }) =>
