@@ -2,12 +2,10 @@ import { useTheme } from "../context/ThemeProvider";
 
 const ThemeToggle = () => {
   const { setTheme, theme } = useTheme();
-  console.log(theme);
   const toggleTheme = () => {
     switch (theme) {
       case "dark":
         setTheme("light");
-
         break;
       case "light":
         setTheme("dark");
