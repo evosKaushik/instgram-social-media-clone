@@ -64,6 +64,18 @@ const userSchema = new Schema(
       default: false,
       description: "Indicates if the user's account is private",
     },
+    followersCount: {
+      type: Number,
+      default: 0,
+    },
+    followingCount: {
+      type: Number,
+      default: 0,
+    },
+    posts: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
@@ -80,6 +92,11 @@ const userSchema = new Schema(
         delete ret.password; // extra safety
 
         return ret;
+      },
+    },
+    statics: {
+      findByUsername(username) {
+        return this.findOne({ username });
       },
     },
   },
