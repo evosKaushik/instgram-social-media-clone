@@ -42,7 +42,7 @@ const getUserByNameAndUsername = async (req, res, next) => {
     filter = {
       $or: [
         { name: { $regex: search, $options: "i" } },
-        { username: { $regex: search, $options: "i" } },
+        { username: { $regex: `^${search}`, $options: "i" } }
       ],
     };
   }
