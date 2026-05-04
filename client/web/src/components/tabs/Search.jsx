@@ -1,16 +1,18 @@
 import { IoMdClose } from "react-icons/io";
 import { IoSearch } from "react-icons/io5";
 import { useState, useEffect } from "react";
-import axiosInstance from "../utils/axios";
-import ImageWithShimmer from "./ImageShimmer";
+import axiosInstance from "../../utils/axios";
+import ImageWithShimmer from "../ImageShimmer";
 import { Link } from "react-router-dom";
 import { BsPatchCheckFill } from "react-icons/bs";
+import { useAuthStore } from "../../store/useAuth.store";
 
-const Search = ({ setOpen }) => {
+const Search = ({ close }) => {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const authUser = useAuthStore(s => s.authUser)
 
   // ✅ Debounce logic (ONLY debounce here)
   useEffect(() => {
@@ -73,12 +75,12 @@ const Search = ({ setOpen }) => {
       {loading && <p className="text-sm text-zinc-400">Searching...</p>}
       {/* Results */}
       <div className="mt-4 space-y-2">
-        {results.map((user) => (
+        {results.filter(user => user.id !== authUser.id).map((user) => (
           <Link
             key={user.id}
             to={`/${user.username}`}
             onClick={() => {
-              setOpen(false);
+              close()
               setQuery("");
             }}
             className="p-2 rounded hover:bg-foreground/10 cursor-pointer flex items-start gap-2"
@@ -109,7 +111,7 @@ const Search = ({ setOpen }) => {
 
       {/* Close */}
       <button
-        onClick={() => setOpen(false)}
+        onClick={close}
         className="absolute top-4 right-4 cursor-pointer"
       >
         <IoMdClose size={28} />

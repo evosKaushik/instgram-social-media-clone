@@ -1,136 +1,129 @@
-import mongoose from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import Follow from "../models/follow.model.js";
 import User from "../models/user.model.js";
 import FollowRequest from "../models/followRequest.model.js";
 
-const followUser = async (req, res, next) => {
+/* ---------------- FOLLOW ---------------- */
+
+export const followUser = async (req, res, next) => {
   const session = await mongoose.startSession();
 
   try {
     await session.startTransaction();
 
     const followerId = req.user.id;
-    const followerUsername = req.user.username;
-    const { username: followingUsername } = req.params;
+    const { username } = req.params;
 
-    if (followerUsername === followingUsername) {
+    const targetUser = await User.findOne({ username }).session(session);
+    if (!targetUser) throw new Error("User not found");
+
+    if (targetUser._id.toString() === followerId) {
       throw new Error("Cannot follow yourself");
-    }
-
-    // 🔍 Find target user by username (but store id)
-    const targetUser = await User.findOne({
-      username: followingUsername,
-    }).session(session);
-
-    if (!targetUser) {
-      throw new Error("User not found");
     }
 
     const followingId = targetUser._id;
 
-    // 🔁 Already following check
-    const existing = await Follow.findOne({
+    const alreadyFollowing = await Follow.exists({
       followerId,
       followingId,
     }).session(session);
 
-    if (existing) {
-      throw new Error("Already following");
+    if (alreadyFollowing) {
+      return res.status(409).json({
+        success: false,
+        message: "Already following",
+      });
     }
 
-    // 🔐 PRIVATE ACCOUNT → only create request (no counts update)
+    // 🔐 PRIVATE ACCOUNT
     if (targetUser.isPrivate) {
+      const existingRequest = await FollowRequest.findOne({
+        senderId: followerId,
+        receiverId: followingId,
+      }).session(session);
+
+      if (existingRequest) {
+        throw new Error("Request already sent");
+      }
+
       await FollowRequest.create(
-        [
-          {
-            senderId: followerId,
-            receiverId: followingId,
-          },
-        ],
-        { session },
+        [{ senderId: followerId, receiverId: followingId }],
+        { session }
       );
 
       await session.commitTransaction();
-      return res.json({ success: true, message: "Follow request sent" });
+      return res.json({ success: true, message: "Request sent" });
     }
 
-    // 🌍 PUBLIC ACCOUNT → follow + increment counts (atomic)
-
+    // 🌍 PUBLIC ACCOUNT
     await Follow.create(
-      [
-        {
-          followerId,
-          followingId,
-        },
-      ],
-      { session },
+      [{ followerId, followingId }],
+      { session }
     );
 
     await User.updateOne(
       { _id: followerId },
       { $inc: { followingCount: 1 } },
-      { session },
+      { session }
     );
 
     await User.updateOne(
       { _id: followingId },
       { $inc: { followersCount: 1 } },
-      { session },
+      { session }
     );
 
     await session.commitTransaction();
 
-    res.json({ success: true, message: "Followed successfully" });
-  } catch (error) {
+    res.json({ success: true, message: "Followed" });
+
+  } catch (err) {
     await session.abortTransaction();
-    next(error);
+    next(err);
   } finally {
     session.endSession();
   }
 };
-const unfollowUser = async (req, res, next) => {
+
+/* ---------------- UNFOLLOW ---------------- */
+
+export const unfollowUser = async (req, res, next) => {
   const session = await mongoose.startSession();
 
   try {
     await session.startTransaction();
 
     const followerId = req.user.id;
-    console.log(req.user);
-    const { username: followingUsername } = req.params;
+    const { username } = req.params;
 
-    // 🔍 find target by username
-    const targetUser = await User.findOne({
-      username: followingUsername,
-    }).session(session);
-
+    const targetUser = await User.findOne({ username }).session(session);
     if (!targetUser) throw new Error("User not found");
 
     const followingId = targetUser._id;
 
-    // ❌ delete follow
     const deleted = await Follow.findOneAndDelete(
       { followerId, followingId },
-      { session },
+      { session }
     );
 
     if (!deleted) throw new Error("Not following");
 
-    // 🔢 update counts atomically
     await User.updateOne(
       { _id: followerId },
       { $inc: { followingCount: -1 } },
-      { session },
+      { session }
     );
 
     await User.updateOne(
       { _id: followingId },
       { $inc: { followersCount: -1 } },
-      { session },
+      { session }
     );
 
     await session.commitTransaction();
 
     res.json({ success: true, message: "Unfollowed" });
+
   } catch (err) {
     await session.abortTransaction();
     next(err);
@@ -138,128 +131,111 @@ const unfollowUser = async (req, res, next) => {
     session.endSession();
   }
 };
-const acceptRequest = async (req, res, next) => {
+
+/* ---------------- FOLLOW STATUS ---------------- */
+
+export const getFollowerStatus = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    if (!isValidObjectId(userId)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid userId",
+      });
+    }
+
+    const exists = await Follow.exists({
+      followerId: req.user._id,
+      followingId: userId,
+    });
+
+    res.json({
+      success: true,
+      isFollowing: !!exists,
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+/* ---------------- FOLLOWERS LIST ---------------- */
+
+export const getFollowers = async (req, res, next) => {
+  try {
+    const { username } = req.params;
+
+    const user = await User.findOne({ username });
+    if (!user) throw new Error("User not found");
+
+    const followers = await Follow.find({ followingId: user._id })
+      .populate("followerId", "username avatar")
+      .lean();
+
+    res.json({ success: true, followers });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+/* ---------------- REQUESTS ---------------- */
+
+export const getFollowersRequest = async (req, res, next) => {
+  try {
+    const requests = await FollowRequest.find({
+      receiverId: req.user.id,
+    })
+      .populate("senderId", "username avatar")
+      .lean();
+
+    res.json({ success: true, requests });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const acceptRequest = async (req, res, next) => {
   const session = await mongoose.startSession();
 
   try {
     await session.startTransaction();
 
-    const receiverId = req.user.id;
     const { requestId } = req.params;
 
     const request = await FollowRequest.findById(requestId).session(session);
+    if (!request) throw new Error("Request not found");
 
-    if (
-      !request ||
-      request.receiverId.toString() !== receiverId ||
-      request.status !== "pending"
-    ) {
-      throw new Error("Invalid request");
-    }
-
-    const senderId = request.senderId;
-
-    //TODO Implement Block
-    // // 🚫 block check
-    // const isBlocked = await Block.findOne({
-    //   $or: [
-    //     { blockerId: receiverId, blockedId: senderId },
-    //     { blockerId: senderId, blockedId: receiverId },
-    //   ],
-    // }).session(session);
-
-    // if (isBlocked) {
-    //   throw new Error("Action not allowed");
-    // }
-
-    // ✅ create follow (safe)
-    try {
-      await Follow.create([{ followerId: senderId, followingId: receiverId }], {
-        session,
-      });
-    } catch (err) {
-      if (err.code === 11000) {
-        throw new Error("Already followed");
-      }
-      throw err;
-    }
-
-    // ✅ update counts
-    await User.updateOne(
-      { _id: senderId },
-      { $inc: { followingCount: 1 } },
-      { session },
+    await Follow.create(
+      [{ followerId: request.senderId, followingId: request.receiverId }],
+      { session }
     );
 
-    await User.updateOne(
-      { _id: receiverId },
-      { $inc: { followersCount: 1 } },
-      { session },
-    );
-
-    // ❌ delete request
-    await request.deleteOne({ session });
+    await FollowRequest.deleteOne({ _id: requestId }).session(session);
 
     await session.commitTransaction();
 
-    return res.json({ success: true, message: "Request accepted" });
+    res.json({ success: true, message: "Accepted" });
+
   } catch (err) {
     await session.abortTransaction();
-    return next(err);
+    next(err);
   } finally {
     session.endSession();
   }
 };
-const rejectRequest = async (req, res, next) => {
+
+export const rejectRequest = async (req, res, next) => {
   try {
-    const receiverId = req.user.id;
     const { requestId } = req.params;
-
-    const request = await FollowRequest.findById(requestId);
-
-    if (!request || request.receiverId.toString() !== receiverId) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Request not found" });
-    }
 
     await FollowRequest.deleteOne({ _id: requestId });
 
-    res.json({ success: true, message: "Request rejected" });
+    res.json({ success: true, message: "Rejected" });
+
   } catch (err) {
     next(err);
   }
 };
-const getFollowers = async (req, res, next) => {
-  try {
-    const { username } = req.params;
-    const limit = 20;
-    const cursor = req.query.cursor;
-
-    // 🔍 convert username → id
-    const user = await User.findOne({
-      username: username.toLowerCase(),
-    });
-
-    if (!user) {
-      return res.status(404).json({ success: false, error: "User not found" });
-    }
-
-    const query = { followingId: user._id };
-
-    if (cursor) {
-      query._id = { $lt: cursor };
-    }
-
-    const followers = await Follow.find(query)
-      .sort({ _id: -1 })
-      .limit(limit)
-      .populate("followerId", "username avatar");
-
-    res.status(200).json({ success: true, followers });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export { followUser, unfollowUser, acceptRequest, rejectRequest, getFollowers };

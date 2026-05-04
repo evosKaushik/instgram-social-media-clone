@@ -1,4 +1,3 @@
-import { isValidObjectId } from "mongoose";
 import User from "../models/user.model.js";
 import {
   changePasswordSchema,
@@ -7,214 +6,116 @@ import {
 import { comparePassword, hashPassword } from "../utils/bcrypt.js";
 import { uploadToCloudinary } from "../utils/uploader.js";
 
-const getUserByUsername = async (req, res, next) => {
-  const { username } = req.params;
-  // if (!isValidObjectId(userId))
-  //   return res.status(400).json({
-  //     success: false,
-  //     error: "Invalid, UserId",
-  //   });
+/* ---------------- GET USER ---------------- */
 
+export const getUserByUsername = async (req, res, next) => {
   try {
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ username: req.params.username }).lean();
 
-    if (!user)
+    if (!user) {
       return res.status(404).json({
         success: false,
         error: "User not found",
       });
-
-    return res.status(200).json({
-      success: true,
-      user: user.toJSON(),
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getUserByNameAndUsername = async (req, res, next) => {
-  const { search } = req.query;
-
-  let filter = {};
-
-  if (search) {
-    filter = {
-      $or: [
-        { name: { $regex: search, $options: "i" } },
-        { username: { $regex: `^${search}`, $options: "i" } }
-      ],
-    };
-  }
-
-  try {
-    const users = await User.find(filter);
-    res.status(200).json({ success: true, users });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const updateUser = async (req, res, next) => {
-  const parsed = updateUserSchema.safeParse(req.body);
-
-  if (!parsed.success) {
-    const errors = parsed.error.flatten();
-
-    const formattedFieldErrors = Object.fromEntries(
-      Object.entries(errors.fieldErrors).map(([key, value]) => [
-        key,
-        value?.[0],
-      ]),
-    );
-
-    return res.status(400).json({
-      success: false,
-      error: errors.formErrors[0] || "Invalid input data",
-      errors: formattedFieldErrors,
-    });
-  }
-
-  try {
-    const userId = req.user.id;
-    const updateData = parsed.data;
-
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateData },
-      { returnDocument: true, runValidators: true },
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
     }
 
-    return res.status(200).json({
-      success: true,
-      data: updatedUser,
-    });
+    res.json({ success: true, user });
+
   } catch (err) {
     next(err);
   }
 };
 
-const changePassword = async (req, res, next) => {
-  const parsed = changePasswordSchema.safeParse(req.body);
+/* ---------------- SEARCH ---------------- */
 
-  if (!parsed.success) {
-    const errors = parsed.error.flatten();
-
-    const formattedFieldErrors = Object.fromEntries(
-      Object.entries(errors.fieldErrors).map(([key, value]) => [
-        key,
-        value?.[0],
-      ]),
-    );
-
-    return res.status(400).json({
-      success: false,
-      error: errors.formErrors[0] || "Invalid input data",
-      errors: formattedFieldErrors,
-    });
-  }
-  const userId = req.user.id;
-
-  const { newPassword, oldPassword } = parsed.data;
-  if (!oldPassword?.trim() || !newPassword?.trim())
-    return res.status(400).json({
-      success: false,
-      error: "Enter all the fields",
-    });
-
-  if (oldPassword === newPassword)
-    return res.status(400).json({
-      success: false,
-      error: "Old password is same as new password",
-    });
-
+export const getUserByNameAndUsername = async (req, res, next) => {
   try {
-    const user = await User.findById(userId).select("+password");
+    const { search } = req.query;
 
-    const isMatched = await comparePassword(oldPassword, user.password);
-
-    if (!isMatched) {
-      return res.status(400).json({
-        success: false,
-        error: "Old password is incorrect",
-      });
+    let filter = {};
+    if (search) {
+      filter = {
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { username: { $regex: `^${search}`, $options: "i" } },
+        ],
+      };
     }
 
-    const hashedPassword = await hashPassword(newPassword);
+    const users = await User.find(filter).lean();
 
-    user.password = hashedPassword;
+    res.json({ success: true, users });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+/* ---------------- UPDATE USER ---------------- */
+
+export const updateUser = async (req, res, next) => {
+  try {
+    const parsed = updateUserSchema.safeParse(req.body);
+    if (!parsed.success) throw new Error("Invalid data");
+
+    const updated = await User.findByIdAndUpdate(
+      req.user.id,
+      parsed.data,
+      { new: true }
+    ).lean();
+
+    res.json({ success: true, user: updated });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+/* ---------------- CHANGE PASSWORD ---------------- */
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const parsed = changePasswordSchema.safeParse(req.body);
+    if (!parsed.success) throw new Error("Invalid input");
+
+    const user = await User.findById(req.user.id).select("+password");
+
+    const match = await comparePassword(
+      parsed.data.oldPassword,
+      user.password
+    );
+
+    if (!match) throw new Error("Wrong password");
+
+    user.password = await hashPassword(parsed.data.newPassword);
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Password updated successfully",
-    });
-  } catch (error) {
-    next(error);
+    res.json({ success: true, message: "Password updated" });
+
+  } catch (err) {
+    next(err);
   }
 };
 
-const updateAvatar = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
+/* ---------------- UPDATE AVATAR ---------------- */
 
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        error: "No file uploaded",
-      });
-    }
+export const updateAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) throw new Error("No file");
 
     const result = await uploadToCloudinary(req.file.buffer, {
-      folder: "instagram-clone/avatar",
-      public_id: userId,
-      overwrite: true,
-      resource_type: "image",
-      transformation: [
-        {
-          width: 200,
-          height: 200,
-          crop: "fill", // fill the box
-          gravity: "face", // focus on face (smart for avatars)
-        },
-        {
-          quality: "auto", // optimize size
-          fetch_format: "auto", // webp/avif when supported
-        },
-      ],
+      folder: "instagram/avatar",
     });
-
-    // result.secure_url = image URL
-    // result.public_id = needed for delete later
 
     const user = await User.findByIdAndUpdate(
-      userId,
-      {
-        avatar: result.secure_url,
-      },
-      { returnDocument: true },
+      req.user.id,
+      { avatar: result.secure_url },
+      { returnDocument: true }
     );
 
-    return res.status(200).json({
-      success: true,
-      data: user,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+    res.json({ success: true, user });
 
-export {
-  getUserByUsername,
-  getUserByNameAndUsername,
-  updateUser,
-  changePassword,
-  updateAvatar,
+  } catch (err) {
+    next(err);
+  }
 };
