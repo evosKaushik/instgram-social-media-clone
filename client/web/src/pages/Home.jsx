@@ -1,6 +1,8 @@
 import Post from "../components/Post";
+import { useAuthStore } from "../store/useAuth.store";
 
 const Home = () => {
+  const authUser = useAuthStore(s => s.authUser)
   return (
     <section className="h-full w-full   scrollbar">
       <div className="h-full w-full flex  mx-auto justify-center sm:pt-8 pt-0 max-w-[820px] ">
@@ -12,7 +14,7 @@ const Home = () => {
                 <div className="w-[60px] h-[60px] sm:w-[66px] sm:h-[66px] rounded-full bg-gradient-to-tr from-yellow-400 to-fuchsia-600 p-[2px] mb-1">
                   <div className="bg-white dark:bg-black rounded-full p-[2px] w-full h-full">
                     <img
-                      src="https://i.pravatar.cc/150?u=openaidalle"
+                      src={authUser.avatar}
                       className="rounded-full w-full h-full object-cover"
                     />
                   </div>

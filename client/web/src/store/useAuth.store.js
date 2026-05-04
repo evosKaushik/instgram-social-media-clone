@@ -8,11 +8,15 @@ export const useAuthStore = create((set, get) => ({
   isSigningUp: false,
   isLoggingIn: false,
 
+  setAuthUser: (payload) => {
+    set({ authUser: payload });
+  },
+
   // 🔍 CHECK AUTH
   checkAuth: async () => {
     set({ isCheckingAuth: true });
     try {
-      const {data} = await axiosInstance.get("/auth/check");
+      const { data } = await axiosInstance.get("/auth/check");
       set({ authUser: data.user });
       return true;
     } catch (error) {
