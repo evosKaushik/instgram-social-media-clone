@@ -26,36 +26,36 @@ const Profile = () => {
   const [followLoading, setFollowLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(authUser?.avatar);
 
-useEffect(() => {
-  if (!username || !authUser) return;
+  useEffect(() => {
+    if (!username || !authUser) return;
 
-  if (isMe) {
-    setUser(authUser);
-    setLoading(false); // ❗ you forgot this
-    return;
-  }
-
-  const fetchUser = async () => {
-    try {
-      setLoading(true);
-
-      const res = await axiosInstance.get(`/users/${username}`);
-      setUser(res.data.user);
-
-      const followRes = await axiosInstance.get(
-        `/users/follow-status/${res.data.user._id}`
-      );
-
-      setIsFollowing(followRes.data.isFollowing);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+    if (isMe) {
+      setUser(authUser);
+      setLoading(false); // ❗ you forgot this
+      return;
     }
-  };
 
-  fetchUser();
-}, [username, authUser, isMe]);
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+
+        const res = await axiosInstance.get(`/users/${username}`);
+        setUser(res.data.user);
+
+        const followRes = await axiosInstance.get(
+          `/users/follow-status/${res.data.user._id}`,
+        );
+
+        setIsFollowing(followRes.data.isFollowing);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [username, authUser, isMe]);
 
   // 🔥 FOLLOW / UNFOLLOW
   const handleFollow = async () => {
@@ -95,7 +95,6 @@ useEffect(() => {
     { id: "saved", icon: <BsBookmark size={22} /> },
     { id: "tagged", icon: <BsPersonBoundingBox size={22} /> },
   ];
-
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
@@ -137,9 +136,9 @@ useEffect(() => {
       });
 
       if (data.success) {
-        setAuthUser(data?.user);
-         setUser(data.user)
-        
+        console.log(data)
+        setAuthUser(data?.data);
+        setUser(data.data);
       }
     } catch (error) {
       setImagePreview(authUser?.avatar);
@@ -153,7 +152,7 @@ useEffect(() => {
       <div className="max-w-[935px] mx-auto px-4 pt-5">
         {/* PROFILE HEADER */}
         <section className="flex gap-6 mb-6">
-          <div className="w-24 h-24 rounded-full overflow-hidden relative">
+          <div className="w-24 h-24 rounded-full overflow-hidden relative border border-foreground/50">
             <ImageWithShimmer src={imagePreview} />
             {isMe && (
               <>

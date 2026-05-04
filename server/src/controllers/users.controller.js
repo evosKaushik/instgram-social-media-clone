@@ -113,7 +113,7 @@ export const updateAvatar = async (req, res, next) => {
       { returnDocument: true }
     );
 
-    res.json({ success: true, user });
+    res.json({ success: true, user: user });
 
   } catch (err) {
     next(err);
