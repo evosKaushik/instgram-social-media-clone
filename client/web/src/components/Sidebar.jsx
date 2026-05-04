@@ -1,173 +1,165 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import { useAuthStore } from "../store/useAuth.store";
-import { useState } from "react";
-import SidebarModal from "./SidebarModal";
-import Search from "./Search";
+import { lazy, useState, Suspense } from "react";
+import { BsPatchCheckFill } from "react-icons/bs";
+import Search from "./tabs/Search";
+import Notifications from "./tabs/Notifications";
 
-export default function Sidebar({ toggleNotif, toggleCreate }) {
+const SidebarModal = lazy(() => import("./SidebarModal.jsx"));
+
+export default function Sidebar({ toggleCreate }) {
   const authUser = useAuthStore((s) => s.authUser);
-  const [open, setOpen] = useState(false);
+
+  // 🔥 ONLY ONE STATE
+  const [activeModal, setActiveModal] = useState(null);
 
   return (
     <>
-      {/* Mobile Top Navigation */}
-      <div className="md:hidden flex justify-between items-center px-4 py-2 border-b border-gray-300 dark:border-gray-800 bg-white dark:bg-black sticky top-0 z-[60]">
-        <div className="text-2xl font-serif mt-1">Instagram</div>
+      {/* MOBILE TOP */}
+      <div className="md:hidden flex justify-between items-center px-4 py-2 border-b bg-white dark:bg-black sticky top-0 z-[60]">
+        <span className="flex items-center gap-1 font-bold text-lg">
+          {authUser?.username}
+          <BsPatchCheckFill className="text-blue-500" size={16} />
+        </span>
+
         <div className="flex space-x-4">
-          <div className="relative cursor-pointer" onClick={toggleNotif}>
+          <button onClick={() => setActiveModal("notifications")}>
             <i className="fa-regular fa-heart text-2xl"></i>
-            <div className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></div>
-          </div>
-          <NavLink to="/messages" className="relative cursor-pointer">
+          </button>
+
+          <NavLink to="/messages">
             <i className="fa-brands fa-facebook-messenger text-2xl"></i>
           </NavLink>
         </div>
       </div>
 
-      {/* Desktop Sidebar menu */}
-      <aside className="hidden md:flex flex-col w-[72px] lg:w-[244px] h-full border-r border-gray-200 dark:border-gray-800 py-6 px-3 fixed left-0 top-0 bg-white dark:bg-black z-[60] transition-all duration-300">
-        <div className="mb-8 px-2 lg:px-4 hidden lg:block pb-2 cursor-pointer">
-          <Link to="/" className="text-2xl font-serif mt-2">
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden md:flex flex-col w-[72px] lg:w-[244px] h-full border-r py-6 px-3 fixed left-0 top-0 bg-white dark:bg-black z-[60]">
+
+        {/* LOGO */}
+        <div className="mb-8 hidden lg:block px-4">
+          <Link to="/" className="text-2xl font-serif">
             Instagram
           </Link>
         </div>
-        <div className="mb-4 px-3 lg:hidden flex justify-center hover:bg-gray-100 dark:hover:bg-gray-900 p-3 rounded-lg cursor-pointer transition-colors w-fit mx-auto group">
-          <Link to="/">
-            <i className="fa-brands fa-instagram text-2xl group-hover:scale-105 transition-transform"></i>
-          </Link>
-        </div>
 
-        <nav className="flex flex-col gap-1 flex-grow overflow-y-auto no-scrollbar">
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              `flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg group transition-colors w-fit lg:w-full ${isActive ? "font-bold" : ""}`
-            }
-          >
-            <i className="fa-solid fa-house text-[22px] group-hover:scale-105 transition-transform"></i>
-            <span className="hidden lg:block text-[15px]">Home</span>
+        <nav className="flex flex-col gap-1 flex-grow">
+
+          {/* HOME */}
+          <NavLink to="/" className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg">
+            <i className="fa-solid fa-house text-[22px]" />
+            <span className="hidden lg:block">Home</span>
           </NavLink>
-          <div
-            href="#"
-            className=" hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg group transition-colors w-fit lg:w-full"
+
+          {/* SEARCH */}
+          <button
+            onClick={() => setActiveModal("search")}
+            className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg"
           >
-            <div
-              onClick={() => setOpen(true)}
-              className="flex items-center gap-4 p-3"
-            >
-              <i className="fa-solid fa-magnifying-glass text-[22px] group-hover:scale-105 transition-transform"></i>
-              <span className="hidden lg:block text-[15px]">Search</span>
-            </div>
-            <div>
-              <SidebarModal isOpen={open} onClose={() => setOpen(false)}>
-                <Search setOpen={setOpen} />
-              </SidebarModal>
-            </div>
-          </div>
-          <NavLink
-            to="/explore"
-            className={({ isActive }) =>
-              `flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg group transition-colors w-fit lg:w-full ${isActive ? "font-bold" : ""}`
-            }
-          >
-            <i className="fa-regular fa-compass text-[22px] group-hover:scale-105 transition-transform"></i>
-            <span className="hidden lg:block text-[15px]">Explore</span>
+            <i className="fa-solid fa-magnifying-glass text-[22px]" />
+            <span className="hidden lg:block">Search</span>
+          </button>
+
+          {/* EXPLORE */}
+          <NavLink to="/explore" className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg">
+            <i className="fa-regular fa-compass text-[22px]" />
+            <span className="hidden lg:block">Explore</span>
           </NavLink>
-          <NavLink
-            to="/reels"
-            className={({ isActive }) =>
-              `flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg group transition-colors w-fit lg:w-full ${isActive ? "font-bold" : ""}`
-            }
-          >
-            <i className="fa-solid fa-clapperboard text-[22px] group-hover:scale-105 transition-transform"></i>
-            <span className="hidden lg:block text-[15px]">Reels</span>
+
+          {/* REELS */}
+          <NavLink to="/reels" className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg">
+            <i className="fa-solid fa-clapperboard text-[22px]" />
+            <span className="hidden lg:block">Reels</span>
           </NavLink>
-          <NavLink
-            to="/messages"
-            className={({ isActive }) =>
-              `flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg group transition-colors w-fit lg:w-full ${isActive ? "font-bold" : ""}`
-            }
-          >
-            <i className="fa-brands fa-facebook-messenger text-[22px] group-hover:scale-105 transition-transform"></i>
-            <span className="hidden lg:block text-[15px]">Messages</span>
+
+          {/* MESSAGES */}
+          <NavLink to="/messages" className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg">
+            <i className="fa-brands fa-facebook-messenger text-[22px]" />
+            <span className="hidden lg:block">Messages</span>
           </NavLink>
-          <a
-            href="#"
-            onClick={toggleNotif}
-            className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg group transition-colors w-fit lg:w-full"
+
+          {/* NOTIFICATIONS */}
+          <button
+            onClick={() => setActiveModal("notifications")}
+            className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg"
           >
-            <i className="fa-regular fa-heart text-[22px] group-hover:scale-105 transition-transform"></i>
-            <span className="hidden lg:block text-[15px]">Notifications</span>
-          </a>
-          <a
-            href="#"
+            <i className="fa-regular fa-heart text-[22px]" />
+            <span className="hidden lg:block">Notifications</span>
+          </button>
+
+          {/* CREATE */}
+          <button
             onClick={toggleCreate}
-            className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg group transition-colors w-fit lg:w-full"
+            className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg"
           >
-            <i className="fa-regular fa-square-plus text-[22px] group-hover:scale-105 transition-transform"></i>
-            <span className="hidden lg:block text-[15px]">Create</span>
-          </a>
+            <i className="fa-regular fa-square-plus text-[22px]" />
+            <span className="hidden lg:block">Create</span>
+          </button>
+
+          {/* PROFILE */}
           <NavLink
             to={`/${authUser?.username}`}
-            className={({ isActive }) =>
-              `flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg group transition-colors w-fit lg:w-full ${isActive ? "font-bold" : ""}`
-            }
+            className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg"
           >
             <img
               src={authUser?.avatar || "default-avatar.jpeg"}
-              className="w-6 h-6 rounded-full group-hover:scale-105 transition-transform object-cover"
+              className="w-6 h-6 rounded-full object-cover"
             />
-            <span className="hidden lg:block text-[15px]">Profile</span>
+            <span className="hidden lg:block">Profile</span>
           </NavLink>
         </nav>
 
-        <div className="mt-auto shrink-0 pb-2">
-          <NavLink
-            to="/settings"
-            className={({ isActive }) =>
-              `flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg group transition-colors w-fit lg:w-full ${isActive ? "font-bold" : ""}`
-            }
-          >
-            <i className="fa-solid fa-gear text-[22px] group-hover:scale-105 transition-transform"></i>
-            <span className="hidden lg:block text-[15px]">Settings</span>
+        {/* FOOTER */}
+        <div className="mt-auto">
+          <NavLink to="/settings" className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg">
+            <i className="fa-solid fa-gear text-[22px]" />
+            <span className="hidden lg:block">Settings</span>
           </NavLink>
 
           <ThemeToggle />
         </div>
       </aside>
 
-      {/* MOBILE BOTTOM NAVIGATION */}
-      <nav className="md:hidden flex justify-around items-center h-[50px] border-t border-gray-300 dark:border-gray-800 bg-white dark:bg-black fixed bottom-0 left-0 w-full z-[60]">
-        <NavLink to="/" className="p-2 transition-transform active:scale-95">
+      {/* 🔥 SINGLE MODAL SYSTEM */}
+      <Suspense fallback={null}>
+        <SidebarModal
+          key={activeModal}
+          isOpen={!!activeModal}
+          onClose={() => setActiveModal(null)}
+        >
+          {activeModal === "search" && (
+            <Search close={() => setActiveModal(null)} />
+          )}
+
+          {activeModal === "notifications" && (
+            <Notifications close={() => setActiveModal(null)} />
+          )}
+        </SidebarModal>
+      </Suspense>
+
+      {/* MOBILE BOTTOM NAV */}
+      <nav className="md:hidden flex justify-around items-center h-[50px] border-t bg-white dark:bg-black fixed bottom-0 w-full z-[60]">
+        <NavLink to="/">
           <i className="fa-solid fa-house text-2xl"></i>
         </NavLink>
-        <NavLink
-          to="/explore"
-          className="p-2 transition-transform active:scale-95"
-        >
+
+        <button onClick={() => setActiveModal("search")}>
           <i className="fa-solid fa-magnifying-glass text-2xl"></i>
-        </NavLink>
-        <NavLink
-          to="/reels"
-          className="p-2 transition-transform active:scale-95"
-        >
+        </button>
+
+        <NavLink to="/reels">
           <i className="fa-solid fa-clapperboard text-2xl"></i>
         </NavLink>
-        <a
-          href="#"
-          onClick={toggleCreate}
-          className="p-2 transition-transform active:scale-95"
-        >
+
+        <button onClick={toggleCreate}>
           <i className="fa-regular fa-square-plus text-2xl"></i>
-        </a>
-        <NavLink
-          to={`/${authUser?.username}`}
-          className="p-2 transition-transform active:scale-95"
-        >
+        </button>
+
+        <NavLink to={`/${authUser?.username}`}>
           <img
             src={authUser?.avatar || "default-avatar.jpeg"}
-            className="w-6 h-6 rounded-full object-cover border border-gray-300"
+            className="w-6 h-6 rounded-full border"
           />
         </NavLink>
       </nav>

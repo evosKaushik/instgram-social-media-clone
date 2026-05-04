@@ -1,29 +1,94 @@
-import { Link, useLocation, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useAuthStore } from "../store/useAuth.store";
+import axiosInstance from "../utils/axios";
+import { FaCamera } from "react-icons/fa";
 import {
   BsGrid3X3,
   BsBookmark,
   BsPersonBoundingBox,
-  BsPlusLg,
   BsPatchCheckFill,
 } from "react-icons/bs";
-import { IoSettingsOutline } from "react-icons/io5";
-import { MdOutlineVerified } from "react-icons/md";
-import { RiNotificationLine } from "react-icons/ri";
-import { useAuthStore } from "../store/useAuth.store";
-import ImageWithShimmer from "../components/ImageShimmer";
-import axiosInstance from "../utils/axios";
 import { SlLock } from "react-icons/sl";
+import ImageWithShimmer from "../components/ImageShimmer";
+import toast from "react-hot-toast";
 
 const Profile = () => {
   const { username } = useParams();
   const authUser = useAuthStore((s) => s.authUser);
-  const [user, setUser] = useState(authUser);
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("posts");
-  const { state } = useLocation();
-  const initialUser = state?.user;
+  const setAuthUser = useAuthStore((s) => s.setAuthUser);
+
   const isMe = username === authUser?.username;
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState(authUser?.avatar);
+
+useEffect(() => {
+  if (!username || !authUser) return;
+
+  if (isMe) {
+    setUser(authUser);
+    setLoading(false); // ❗ you forgot this
+    return;
+  }
+
+  const fetchUser = async () => {
+    try {
+      setLoading(true);
+
+      const res = await axiosInstance.get(`/users/${username}`);
+      setUser(res.data.user);
+
+      const followRes = await axiosInstance.get(
+        `/users/follow-status/${res.data.user._id}`
+      );
+
+      setIsFollowing(followRes.data.isFollowing);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchUser();
+}, [username, authUser, isMe]);
+
+  // 🔥 FOLLOW / UNFOLLOW
+  const handleFollow = async () => {
+    if (!user) return;
+
+    try {
+      setFollowLoading(true);
+
+      if (isFollowing) {
+        await axiosInstance.delete(`/users/unfollow/${user.username}`);
+
+        setIsFollowing(false);
+        setUser((prev) => ({
+          ...prev,
+          followersCount: prev.followersCount - 1,
+        }));
+      } else {
+        await axiosInstance.post(`/users/follow/${user.username}`);
+
+        setIsFollowing(true);
+        setUser((prev) => ({
+          ...prev,
+          followersCount: prev.followersCount + 1,
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const showPrivate = user?.isPrivate && !isMe && !isFollowing;
 
   const tabs = [
     { id: "posts", icon: <BsGrid3X3 size={22} /> },
@@ -31,210 +96,143 @@ const Profile = () => {
     { id: "tagged", icon: <BsPersonBoundingBox size={22} /> },
   ];
 
-  const fetchUserById = async () => {
-    try {
-      setLoading(true);
 
-      const { data } = await axiosInstance.get(`/users/${username}`);
-      setUser(data.user);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
 
-  useEffect(() => {
-    if (!username) return;
+    if (!file) return;
 
-    // ✅ Always check if it's me
-    if (username === authUser?.username) {
-      setUser(authUser);
+    if (e.target.files.length > 1) {
+      toast.error("Only one file allowed");
       return;
     }
 
-    // ✅ Use state for instant UI (optional optimization)
-    if (initialUser && initialUser.username === username) {
-      setUser(initialUser);
+    if (!file.type.startsWith("image/")) {
+      toast.error("Only image files are allowed");
+      return;
     }
 
-    // ✅ Always fetch (to avoid stale data)
-    fetchUserById();
-  }, [username, authUser]);
+    const MAX_SIZE = 2 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      toast.error("File too large (max 2MB)");
+      return;
+    }
 
-  const showPrivate = !isMe && user?.isPrivate;
+    const modifiedFile = new File(
+      [file], // keep original binary
+      file.name,
+      { type: file.type },
+    );
+
+    setImagePreview(URL.createObjectURL(modifiedFile));
+
+    const formData = new FormData();
+    formData.append("avatar", modifiedFile);
+
+    try {
+      const { data } = await axiosInstance.patch("/users/avatar", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (data.success) {
+        setAuthUser(data?.user);
+         setUser(data.user)
+        
+      }
+    } catch (error) {
+      setImagePreview(authUser?.avatar);
+      toast.error(error.message);
+      console.log(error);
+    }
+  };
 
   return (
-    <div className=" min-h-screen font-sans">
-      {/* Topbar */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 sticky top-0 bg-black z-10 md:hidden">
-        <span className="flex items-center gap-1 font-bold text-lg">
-          {user?.username}
-          <MdOutlineVerified className="text-blue-500" size={18} />
-        </span>
-
-        <div className="flex gap-2">
-          <button className="p-2 rounded-full hover:bg-zinc-800">
-            <RiNotificationLine size={24} />
-          </button>
-          <button className="p-2 rounded-full hover:bg-zinc-800">
-            <IoSettingsOutline size={24} />
-          </button>
-        </div>
-      </header>
-
+    <div className="min-h-screen">
       <div className="max-w-[935px] mx-auto px-4 pt-5">
-        {/* Profile Info */}
-        <section className="flex items-center   gap-6 md:gap-12 mb-5">
-          {/* Avatar */}
-          <div className="w-20 h-20 md:w-32 md:h-32 rounded-full bg-zinc-800 overflow-hidden border border-zinc-700 flex-shrink-0 flex items-end justify-center">
-            {user?.avatar ? (
-              <ImageWithShimmer
-                src={user.avatar}
-                // className="w-full h-full object-cover"
-              />
-            ) : (
-              <svg viewBox="0 0 80 80" className="w-[90%] h-[90%]">
-                <circle cx="40" cy="30" r="18" fill="#555" />
-                <ellipse cx="40" cy="70" rx="28" ry="18" fill="#555" />
-              </svg>
+        {/* PROFILE HEADER */}
+        <section className="flex gap-6 mb-6">
+          <div className="w-24 h-24 rounded-full overflow-hidden relative">
+            <ImageWithShimmer src={imagePreview} />
+            {isMe && (
+              <>
+                <div className=" group absolute inset-0 hover:bg-background/50 flex justify-center items-center cursor-pointer transition-colors">
+                  <FaCamera
+                    size={32}
+                    className="opacity-0 group-hover:opacity-80"
+                  />
+                  <input
+                    type="file"
+                    name="avatar"
+                    onChange={handleAvatarUpload}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    accept="image/*"
+                  />
+                </div>
+              </>
             )}
           </div>
 
-          {/* Meta */}
-          <div className="flex flex-col gap-1 flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Link to={`/${user ?? user?.username}`}>
-                <h2 className="font-bold text-lg md:text-xl lg:text-2xl truncate">
-                  {user?.username}
-                </h2>
-              </Link>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold">{user?.username}</h2>
 
-              {user.isBlueTick && (
-                <BsPatchCheckFill
-                  className="text-blue-500"
-                  size={20}
-                  title="verified"
-                />
+              {user?.isBlueTick && (
+                <BsPatchCheckFill className="text-blue-500" />
               )}
             </div>
 
-            <p className="">{user?.name}</p>
+            <p>{user?.name}</p>
 
-            {/* Stats */}
-            <div className="flex  items-center gap-3 md:gap-8 flex-wrap md:flex-nowrap">
-              <div className="flex gap-1">
-                <span className="font-bold">{user?.posts}</span>
-                <span className="font-semibold">posts</span>
-              </div>
-
-              <div className="flex gap-1">
-                <span className="font-bold">{user?.followersCount}</span>
-                <span className="font-semibold">followers</span>
-              </div>
-
-              <div className="flex gap-1">
-                <span className="font-bold">{user?.followingCount}</span>
-                <span className="font-semibold">following</span>
-              </div>
+            <div className="flex gap-4">
+              <span>{user?.posts} posts</span>
+              <span>{user?.followersCount} followers</span>
+              <span>{user?.followingCount} following</span>
             </div>
+
+            {isMe ? (
+              <button className="bg-border px-4 py-1 rounded">
+                Edit Profile
+              </button>
+            ) : (
+              <button
+                onClick={handleFollow}
+                className="bg-blue-500 text-white px-4 py-1 rounded"
+              >
+                {followLoading
+                  ? "Loading..."
+                  : isFollowing
+                    ? "Unfollow"
+                    : "Follow"}
+              </button>
+            )}
           </div>
         </section>
-        <div className="mb-5">
-          <p>{user?.bio}</p>
-        </div>
 
-        {/* Buttons */}
-        {isMe ? (
-          <div className="flex gap-2 mb-6 max-sm:flex-col">
-            <button className="flex-1 bg-border text-sm font-semibold py-2  hover:cursor-pointer hover:bg-border/80 rounded-lg active:scale-95 transition-colors">
-              Edit Profile
-            </button>
-            <button className="flex-1 bg-border text-sm font-semibold py-2 hover:cursor-pointer hover:bg-border/80 rounded-lg active:scale-95 transition-colors">
-              View archive
-            </button>
+        {/* PRIVATE VIEW */}
+        {showPrivate ? (
+          <div className="flex flex-col items-center gap-3 py-10">
+            <SlLock size={32} />
+            <h3>This account is private</h3>
+            <p>Follow to see posts</p>
           </div>
         ) : (
-          <div className="flex gap-2 mb-6 max-sm:flex-col">
-            <button className="flex-1 bg-blue-500 dark:bg-blue-800  text-sm font-semibold py-2 hover:cursor-pointer hover:bg-border/80 rounded-lg active:scale-95 transition-colors">
-              Follow
-            </button>
-          </div>
-        )}
-
-        {/* Highlights */}
-        {isMe && (
-          <section className="flex gap-4 overflow-x-auto pb-2 mb-4 no-scrollbar">
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-16 h-16 rounded-full border-2 border-dashed  flex items-center justify-center hover:bg-foreground/5 cursor-pointer">
-                <BsPlusLg size={24} className="" />
-              </div>
-              <span className="text-xs">New</span>
-            </div>
-          </section>
-        )}
-
-        {/* Tabs */}
-        <div className="flex border-t border-zinc-800 -mx-4">
-          {showPrivate
-            ? !isMe && (
-                <div className="flex justify-center items-center mx-auto py-8 gap-4">
-                  <div className="border border-foreground/50 rounded-full p-4 inline-block ">
-                    <SlLock size={28} />
-                  </div>
-                  <div>
-                    <h3>This profile is private</h3>
-                    <p className="text-sm">
-                      Follow to see their photos and videos.
-                    </p>
-                  </div>
-                </div>
-              )
-            : tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 py-3 flex justify-center ${
-                    activeTab === tab.id
-                      ? "text-white border-t border-white"
-                      : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
+          <>
+            {/* TABS */}
+            <div className="flex border-t">
+              {tabs.map((tab) => (
+                <button key={tab.id} className="flex-1 py-3">
                   {tab.icon}
                 </button>
               ))}
-        </div>
-
-        {/* Empty State */}
-        {isMe && user.isPrivate && (
-          <div className="min-h-[260px] flex items-center justify-center">
-            <div className="text-center flex flex-col items-center gap-3 px-6 py-10">
-              {activeTab === "posts" && (
-                <BsGrid3X3 size={48} className="text-zinc-700" />
-              )}
-              {activeTab === "saved" && (
-                <BsBookmark size={48} className="text-zinc-700" />
-              )}
-              {activeTab === "tagged" && (
-                <BsPersonBoundingBox size={48} className="text-zinc-700" />
-              )}
-
-              <p className="text-xl font-bold">
-                {activeTab === "posts" && "Share Photos"}
-                {activeTab === "saved" && "Save"}
-                {activeTab === "tagged" && "Photos of you"}
-              </p>
-
-              <p className="text-sm text-zinc-500 max-w-xs">
-                {activeTab === "posts" &&
-                  "When you share photos, they will appear on your profile."}
-                {activeTab === "saved" &&
-                  "Save photos and videos that you want to see again."}
-                {activeTab === "tagged" &&
-                  "When people tag you in photos, they'll appear here."}
-              </p>
             </div>
-          </div>
+
+            {/* POSTS PLACEHOLDER */}
+            <div className="py-10 text-center text-gray-500">
+              Posts will be here
+            </div>
+          </>
         )}
       </div>
     </div>
