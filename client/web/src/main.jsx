@@ -12,61 +12,58 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Profile = lazy(() => import("./pages/Profile.jsx"));
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./context/ThemeProvider.jsx";
-import { RequireAuth } from "./components/RequireAuth.jsx";
-import { PublicOnly } from "./components/PublicOnly.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import MainLayout from "./layouts/MainLayout.jsx";
 import AuthLayout from "./layouts/AuthLayout.jsx";
+import RootLayout from "./layouts/RootLayout.jsx";
+import AuthCheck from "./components/AuthCheck.jsx";
 
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
-    element: <AuthLayout />,
+    element: <RootLayout />,
     children: [
       {
-        path: "/login",
         element: (
-          <PublicOnly isPublic={true}>
-            <Login />
-          </PublicOnly>
+          <AuthCheck requireAuth={false}>
+            <AuthLayout />
+          </AuthCheck>
         ),
+        children: [
+          {
+            path: "/login",
+            element: <Login />,
+          },
+          {
+            path: "/register",
+            element: <Signup />,
+          },
+        ],
       },
       {
-        path: "/register",
+        path: "/",
         element: (
-          <PublicOnly>
-            <Signup />
-          </PublicOnly>
+          <AuthCheck requireAuth={true}>
+            <MainLayout />
+          </AuthCheck>
         ),
+        children: [
+          {
+            index: true,
+            element: <Home />,
+          },
+          {
+            path: "/:username",
+            element: <Profile />,
+          },
+        ],
+      },
+      {
+        path: "*",
+        element: <NotFound />,
       },
     ],
-  },
-  {
-    path: "/",
-    element: <MainLayout />,
-    children: [
-      {
-        index: true,
-        element: (
-          <RequireAuth>
-            <Home />
-          </RequireAuth>
-        ),
-      },
-      {
-        path: "/:username",
-        element: (
-          <RequireAuth>
-            <Profile />
-          </RequireAuth>
-        ),
-      },
-    ],
-  },
-  {
-    path: "*",
-    element: <NotFound />,
   },
 ]);
 
