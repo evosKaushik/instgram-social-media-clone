@@ -1,5 +1,10 @@
 import axios from "axios";
-import ENV from "./env"
+import ENV from "./env";
+import NProgress from "nprogress";
+import "nprogress/nprogress.css";
+
+// Optional: Configure NProgress to be less intrusive (e.g. no spinner)
+NProgress.configure({ showSpinner: false });
 
 const axiosInstance = axios.create({
   baseURL: ENV.SERVER_URL,
@@ -24,6 +29,7 @@ const processQueue = (error) => {
 
 // 🔵 REQUEST LOG
 axiosInstance.interceptors.request.use((config) => {
+  NProgress.start();
   console.log("📤 Request:", config.method?.toUpperCase(), config.url);
   return config;
 });
@@ -31,11 +37,13 @@ axiosInstance.interceptors.request.use((config) => {
 // 🔴 RESPONSE + REFRESH LOGIC
 axiosInstance.interceptors.response.use(
   (res) => {
+    NProgress.done();
     console.log("📥 Response:", res.status, res.config.url);
     return res;
   },
 
   async (error) => {
+    NProgress.done();
     const originalRequest = error.config;
 
     console.log("❌ Error:", error.response?.status, originalRequest.url);

@@ -1,7 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import Layout from "./Layout.jsx";
 import { createBrowserRouter } from "react-router-dom";
 import { RouterProvider } from "react-router";
 import { lazy } from "react";
@@ -13,54 +12,58 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Profile = lazy(() => import("./pages/Profile.jsx"));
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./context/ThemeProvider.jsx";
-import { RequireAuth } from "./components/RequireAuth.jsx";
-import { PublicOnly } from "./components/PublicOnly.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import MainLayout from "./layouts/MainLayout.jsx";
+import AuthLayout from "./layouts/AuthLayout.jsx";
+import RootLayout from "./layouts/RootLayout.jsx";
+import AuthCheck from "./components/AuthCheck.jsx";
 
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: <Layout />,
+    element: <RootLayout />,
     children: [
       {
-        index: true,
         element: (
-          <RequireAuth>
-            <Home />
-          </RequireAuth>
+          <AuthCheck requireAuth={false}>
+            <AuthLayout />
+          </AuthCheck>
         ),
+        children: [
+          {
+            path: "/login",
+            element: <Login />,
+          },
+          {
+            path: "/register",
+            element: <Signup />,
+          },
+        ],
       },
       {
-        path: "/:username",
+        path: "/",
         element: (
-          <RequireAuth>
-            <Profile />
-          </RequireAuth>
+          <AuthCheck requireAuth={true}>
+            <MainLayout />
+          </AuthCheck>
         ),
+        children: [
+          {
+            index: true,
+            element: <Home />,
+          },
+          {
+            path: "/:username",
+            element: <Profile />,
+          },
+        ],
+      },
+      {
+        path: "*",
+        element: <NotFound />,
       },
     ],
-  },
-  {
-    path: "/login",
-    element: (
-      <PublicOnly isPublic={true}>
-        <Login />
-      </PublicOnly>
-    ),
-  },
-  {
-    path: "/signup",
-    element: (
-      <PublicOnly>
-        <Signup />
-      </PublicOnly>
-    ),
-  },
-  {
-    path: "*",
-    element: <NotFound />,
   },
 ]);
 

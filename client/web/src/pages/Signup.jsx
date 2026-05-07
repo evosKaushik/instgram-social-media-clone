@@ -4,6 +4,9 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuth.store";
+import AuthLeftPanel from "../components/auth/AuthLeftPanel";
+import AuthFooter from "../components/auth/AuthFooter";
+import { ClipLoader } from "react-spinners";
 
 // ---------------- SCHEMA ----------------
 const signupSchema = z.object({
@@ -62,43 +65,7 @@ const Signup = () => {
       {/* ── MAIN CONTENT ── */}
       <main className="flex flex-1 items-center justify-center py-8 gap-8  mx-auto w-full bg-background">
         {/* ── LEFT PANEL ── */}
-        <div className="hidden lg:flex flex-col flex-1 max-w-[60%] ">
-          {/* Logo */}
-          <div className="md:absolute md:left-4 md:top-4 2xl:left-12 2xl:top-12">
-            <img
-              src="./Instagram.png"
-              alt="Instagram Logo"
-              className="size-16"
-            />
-          </div>
-          <div className="flex justify-center items-center flex-col h-full">
-            {/* Headline */}
-            <h1 className="text-4xl leading-tight font-light text-foreground mb-10">
-              See everyday moments from <br />
-              your{" "}
-              <span
-                className="font-normal"
-                style={{
-                  background:
-                    "linear-gradient(90deg, #FF5C00, #FF0069, #D300C5)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                close friends.
-              </span>
-            </h1>
-
-            {/* Phone mockup illustration */}
-            <div className="relative w-full max-w-md 2xl:max-w-lg">
-              <img
-                src="./signup.png"
-                alt="Phone Mockup"
-                className="w-full h-auto object-contain"
-              />
-            </div>
-          </div>
-        </div>
+        <AuthLeftPanel />
 
         {/* ── DIVIDER ── */}
         <div className="hidden lg:block w-px self-stretch bg-border mx-2" />
@@ -268,12 +235,12 @@ const Signup = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 rounded-xl bg-blue-800 text-white text-sm font-semibold transition-opacity mt-1 hover:cursor-pointer"
+              className="w-full h-10 flex justify-center items-center rounded-xl bg-blue-800 text-white text-sm font-semibold transition-opacity mt-1 hover:cursor-pointer"
               style={{
                 opacity: isSubmitting ? 0.6 : 1,
               }}
             >
-              {isSubmitting ? "Creating account..." : "Sign up"}
+              {isSubmitting ? <ClipLoader size={16} color="#ffffff" /> : "Sign up"}
             </button>
           </form>
 
@@ -300,14 +267,7 @@ const Signup = () => {
       </main>
 
       {/* ── FOOTER ── */}
-      <footer className="w-full border-t border-border py-5 px-4">
-        <div className="max-w-4xl mx-auto flex flex-col items-center gap-3">
-          <div className="flex items-center gap-3 text-xs text-gray-400">
-            <span>English ▾</span>
-            <span>© 2026 Instagram from Meta</span>
-          </div>
-        </div>
-      </footer>
+      <AuthFooter />
     </div>
   );
 };

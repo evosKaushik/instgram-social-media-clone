@@ -76,6 +76,11 @@ const userSchema = new Schema(
       type: Number,
       default: 0,
     },
+    gender: {
+      type: String,
+      enum: ["male", "female", "prefer not to say"],
+      default: "prefer not to say",
+    },
   },
   {
     timestamps: true,
