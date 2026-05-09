@@ -154,6 +154,7 @@ const userLogin = async (req, res, next) => {
 const userLogout = async (req, res, next) => {
   try {
     const sessionId = req.sessionId;
+
     if (!sessionId) {
       return res.status(400).json({
         error: "No active session found",
@@ -173,10 +174,15 @@ const userLogout = async (req, res, next) => {
       });
     }
 
+    // FIX: clear cookies
+    res.clearCookie("session");
+    res.clearCookie("refreshSession");
+
     res.status(200).json({
       message: "Logout successful",
       success: true,
     });
+
   } catch (error) {
     next(error);
   }
@@ -202,27 +208,31 @@ const refreshToken = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(refreshToken, ENV.REFRESH_TOKEN_SECRET);
+    const decoded = jwt.verify(
+      refreshToken,
+      ENV.REFRESH_TOKEN_SECRET
+    );
 
     const hashedToken = hashToken(refreshToken);
 
     const session = await Session.findOne({
       userId: decoded.id,
       refreshToken: hashedToken,
+      isValid: true, // FIX
     });
 
     if (!session) {
-      return res.status(403).json({ message: "Session not found" });
+      return res.status(403).json({
+        error: "Session not found or expired",
+      });
     }
 
-    // 3️⃣ Generate new access token
     const newAccessToken = jwt.sign(
       { id: decoded.id },
       ENV.ACCESS_TOKEN_SECRET,
-      { expiresIn: "15m" },
+      { expiresIn: "15m" }
     );
 
-    // 5️⃣ Set cookies
     res.cookie("session", newAccessToken, {
       httpOnly: true,
       secure: ENV.NODE_ENV === "production",
@@ -230,10 +240,15 @@ const refreshToken = async (req, res, next) => {
       maxAge: 15 * 60 * 1000,
     });
 
-    return res.json({ success: true, token: newAccessToken });
+    return res.json({
+      success: true,
+      token: newAccessToken,
+    });
+
   } catch (err) {
-    console.log(err);
-    return res.status(403).json({ error: "Invalid refresh token" });
+    return res.status(403).json({
+      error: "Invalid refresh token",
+    });
   }
 };
 
