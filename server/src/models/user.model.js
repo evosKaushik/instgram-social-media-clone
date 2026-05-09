@@ -78,8 +78,8 @@ const userSchema = new Schema(
     },
     gender: {
       type: String,
-      enum: ["male", "female", "prefer not to say"],
-      default: "prefer not to say",
+      enum: ["Male", "Female", "Prefer not to say"],
+      default: "Prefer not to say",
     },
   },
   {
