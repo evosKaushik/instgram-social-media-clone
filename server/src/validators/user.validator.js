@@ -9,7 +9,10 @@ const updateUserSchema = z
       .optional(),
     bio: z.string().optional(),
     isPrivate: z.boolean().optional(),
-    gender: z.enum(["male", "female", "prefer not to say"]).optional(),
+    gender: z
+      .enum(["Male", "Female", "Prefer not to say"])
+      .default("Prefer not to say")
+      .optional(),
   })
   .strict();
 
