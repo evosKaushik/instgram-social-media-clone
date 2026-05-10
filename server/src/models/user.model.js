@@ -1,5 +1,4 @@
 import { model, Schema } from "mongoose";
-import { maxLength, minLength } from "zod";
 
 const userSchema = new Schema(
   {
@@ -72,7 +71,7 @@ const userSchema = new Schema(
       type: Number,
       default: 0,
     },
-    posts: {
+    postsCount: {
       type: Number,
       default: 0,
     },
@@ -107,10 +106,11 @@ const userSchema = new Schema(
   },
 );
 
-userSchema.pre("save", function (docs) {
+userSchema.pre("save", function () {
   if (!this.bio) {
     this.bio = `Hi, I am ${this.name}`;
   }
+  
 });
 
 userSchema.virtual("id").get(function () {

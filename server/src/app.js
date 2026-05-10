@@ -10,6 +10,7 @@ import metricsMiddleware from "./middlewares/debug.middleware.js";
 /*----------------Routes----------------------*/
 import authRoutes from "./routes/auth.route.js";
 import usersRoute from "./routes/users.route.js";
+import postsRoute from "./routes/posts.route.js";
 /*-------------------------------------------*/
 
 
@@ -35,6 +36,7 @@ app.use(metricsMiddleware); // Log request metrics in development mode
 // Routes
 app.use("/api/v1/auth", authRoutes); // Auth routes
 app.use("/api/v1/users", usersRoute); // User routes
+app.use("/api/v1/posts", postsRoute); // Post routes
 
 // Error handling middleware
 app.use(errorHandler);
