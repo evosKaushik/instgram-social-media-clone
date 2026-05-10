@@ -10,6 +10,8 @@ const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Profile = lazy(() => import("./pages/Profile.jsx"));
+const AccountLayout = lazy(() => import("./layouts/AccountLayout.jsx"));
+const EditProfile = lazy(() => import("./components/account/EditProfile.jsx"));
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./context/ThemeProvider.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -26,9 +28,9 @@ const router = createBrowserRouter([
     children: [
       {
         element: (
-          <AuthCheck requireAuth={false}>
-            <AuthLayout />
-          </AuthCheck>
+          // <AuthCheck requireAuth={false}>
+          <AuthLayout />
+          // </AuthCheck>
         ),
         children: [
           {
@@ -52,6 +54,16 @@ const router = createBrowserRouter([
           {
             index: true,
             element: <Home />,
+          },
+          {
+            path: "/account",
+            element: <AccountLayout />,
+            children: [
+              {
+                path: "edit",
+                element: <EditProfile />,
+              },
+            ],
           },
           {
             path: "/:username",

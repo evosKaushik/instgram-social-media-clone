@@ -7,8 +7,6 @@ import { useAuthStore } from "../store/useAuth.store";
 import AuthLeftPanel from "../components/auth/AuthLeftPanel";
 import AuthFooter from "../components/auth/AuthFooter";
 import { ClipLoader } from "react-spinners";
-import AuthLeftPanel from "../components/auth/AuthLeftPanel";
-import AuthFooter from "../components/auth/AuthFooter";
 
 // ---------------- SCHEMA ----------------
 const loginSchema = z.object({
@@ -191,7 +189,7 @@ const Login = () => {
             type="button"
             className="w-full border rounded-xl py-2.5 text-sm font-semibold text-[#0095f6] border-border hover:bg-muted transition-colors hover:cursor-pointer"
           >
-            <Link to="/signup">Don't have account, Create</Link>
+            <Link to="/register">Don't have account, Create</Link>
           </button>
         </div>
       </main>

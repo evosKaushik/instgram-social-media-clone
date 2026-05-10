@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { FaCamera } from "react-icons/fa";
 import {
   BsGrid3X3,
@@ -16,9 +16,16 @@ import { ClipLoader } from "react-spinners";
 
 const Profile = () => {
   const { username } = useParams();
-  const { user, setUser, loading, isFollowing, setIsFollowing, isMe } = useProfileData(username);
-  const { handleFollow, followLoading } = useFollow(user, setUser, isFollowing, setIsFollowing);
-  const { imagePreview, isUploading, handleAvatarUpload } = useAvatarUpload(setUser);
+  const { user, setUser, loading, isFollowing, setIsFollowing, isMe } =
+    useProfileData(username);
+  const { handleFollow, followLoading } = useFollow(
+    user,
+    setUser,
+    isFollowing,
+    setIsFollowing,
+  );
+  const { imagePreview, isUploading, handleAvatarUpload } =
+    useAvatarUpload(setUser);
 
   const showPrivate = user?.isPrivate && !isMe && !isFollowing;
 
@@ -30,10 +37,10 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-[935px] mx-auto px-4 pt-5">
+      <div className="max-w-[935px] mx-auto px-4 mt-16">
         {/* PROFILE HEADER */}
-        <section className="flex gap-6 mb-6">
-          <div className="w-24 h-24 rounded-full overflow-hidden relative border border-foreground/50">
+        <section className="flex flex-col xs:flex-row gap-6 items-start">
+          <div className="w-24 h-24  md:w-28 md:h-28 rounded-full overflow-hidden relative border border-foreground/50">
             <ImageWithShimmer src={imagePreview} />
             {isUploading && (
               <div className="absolute inset-0 bg-black/40 flex justify-center items-center z-10">
@@ -68,33 +75,47 @@ const Profile = () => {
               )}
             </div>
 
-            <p>{user?.name}</p>
+            <p className="text-sm">{user?.name}</p>
 
             <div className="flex gap-4">
-              <span>{user?.posts} posts</span>
+              <span>{user?.postsCount} posts</span>
               <span>{user?.followersCount} followers</span>
               <span>{user?.followingCount} following</span>
             </div>
-
-            {isMe ? (
-              <button className="bg-border px-4 py-1 rounded">
-                Edit Profile
-              </button>
-            ) : (
-              <button
-                onClick={handleFollow}
-                disabled={followLoading}
-                className="bg-blue-500 text-white px-4 h-8 rounded flex justify-center items-center font-semibold text-sm min-w-[100px]"
-              >
-                {followLoading
-                  ? <ClipLoader size={14} color="#ffffff" />
-                  : isFollowing
-                    ? "Unfollow"
-                    : "Follow"}
-              </button>
-            )}
           </div>
         </section>
+        <div className="py-4 mb-4 w-full">
+          {isMe ? (
+            <div className="flex flex-wrap sm:flex-nowrap gap-4 w-11/12 mx-auto">
+              <Link
+                to="/account/edit"
+                className="bg-border px-4 py-2 rounded-md w-1/2 shadow-md shadow-foreground/10 cursor-pointer active:scale-95 grow transition-all hover:opacity-90"
+              >
+                Edit Profile
+              </Link>
+              <Link
+                to="/account/archive"
+                className="bg-border px-4 py-2 rounded-md w-1/2 shadow-md shadow-foreground/10 cursor-pointer active:scale-95  grow transition-all hover:opacity-90"
+              >
+                View archive
+              </Link>
+            </div>
+          ) : (
+            <button
+              onClick={handleFollow}
+              disabled={followLoading}
+              className="bg-blue-500 text-white px-4 h-8 rounded flex justify-center items-center font-semibold text-sm min-w-[100px]"
+            >
+              {followLoading ? (
+                <ClipLoader size={14} color="#ffffff" />
+              ) : isFollowing ? (
+                "Unfollow"
+              ) : (
+                "Follow"
+              )}
+            </button>
+          )}
+        </div>
 
         {/* PRIVATE VIEW */}
         {showPrivate ? (

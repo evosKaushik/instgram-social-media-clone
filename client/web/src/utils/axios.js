@@ -3,10 +3,15 @@ import ENV from "./env";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 
-// Optional: Configure NProgress to be less intrusive (e.g. no spinner)
 NProgress.configure({ showSpinner: false });
 
 const axiosInstance = axios.create({
+  baseURL: ENV.SERVER_URL,
+  withCredentials: true,
+});
+
+// Separate instance for refresh
+const refreshClient = axios.create({
   baseURL: ENV.SERVER_URL,
   withCredentials: true,
 });
@@ -17,8 +22,6 @@ let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error) => {
-  console.log("🟡 Processing queue, error:", error);
-
   failedQueue.forEach((p) => {
     if (error) p.reject(error);
     else p.resolve();
@@ -27,37 +30,39 @@ const processQueue = (error) => {
   failedQueue = [];
 };
 
-// 🔵 REQUEST LOG
+// REQUEST INTERCEPTOR
 axiosInstance.interceptors.request.use((config) => {
   NProgress.start();
-  console.log("📤 Request:", config.method?.toUpperCase(), config.url);
   return config;
 });
 
-// 🔴 RESPONSE + REFRESH LOGIC
+// RESPONSE INTERCEPTOR
 axiosInstance.interceptors.response.use(
   (res) => {
     NProgress.done();
-    console.log("📥 Response:", res.status, res.config.url);
     return res;
   },
 
   async (error) => {
     NProgress.done();
+
     const originalRequest = error.config;
 
-    console.log("❌ Error:", error.response?.status, originalRequest.url);
+    // Prevent infinite refresh loop
+    if (originalRequest?.url?.includes("/auth/refresh")) {
+      return Promise.reject(error);
+    }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      console.log("⚠️ 401 detected, attempting refresh...");
-
+    // Only refresh on 401
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry
+    ) {
+      // Queue requests while refreshing
       if (isRefreshing) {
-        console.log("⏳ Already refreshing, queueing request:", originalRequest.url);
-
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(() => {
-          console.log("🔁 Retrying queued request:", originalRequest.url);
           return axiosInstance(originalRequest);
         });
       }
@@ -66,24 +71,21 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        console.log("🔄 Calling /auth/refresh");
-
-        await axiosInstance.post("/auth/refresh");
-
-        console.log("✅ Refresh success");
+        // Use separate axios instance
+        await refreshClient.post("/auth/refresh");
 
         processQueue(null);
 
-        console.log("🔁 Retrying original request:", originalRequest.url);
         return axiosInstance(originalRequest);
 
       } catch (err) {
-        console.log("🚫 Refresh failed → redirecting to login");
-
         processQueue(err);
 
-        window.location.href = "/login";
+        // Redirect only once refresh fails
+        window.location.replace("/login");
+
         return Promise.reject(err);
+
       } finally {
         isRefreshing = false;
       }
@@ -92,4 +94,3 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-

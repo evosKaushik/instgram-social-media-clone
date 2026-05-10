@@ -7,7 +7,7 @@ import {
   changePassword,
   updateAvatar,
 } from "../controllers/users.controller.js";
-import { createUploader } from "../middlewares/multer.middleware.js";
+import { avatarUpload, createUploader } from "../middlewares/multer.middleware.js";
 import {
   acceptRequest,
   followUser,
@@ -18,7 +18,7 @@ import {
   getFollowersRequest,
 } from "../controllers/follow.controller.js";
 
-const avatarUpload = createUploader({ fileSize: 2 });
+
 const router = Router();
 
 /* ---------- FOLLOW SYSTEM ---------- */
